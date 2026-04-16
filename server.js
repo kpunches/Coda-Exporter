@@ -169,7 +169,7 @@ app.post("/api/course", async (req, res) => {
 
     // Build filter — matches the formula the original artifact used
     const query = courseCode
-      ? `[Current Course Code].Contains("${courseCode}")`
+      ? `[Course Code].Contains("${courseCode}")`
       : `[Course Name].Contains("${courseName}")`;
 
     // ── Step 1: course row ──────────────────────────────────────────────────
