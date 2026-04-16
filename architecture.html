@@ -202,47 +202,7 @@
       <h2>Data flow</h2>
       <p style="color:#6b7280;font-size:13px">From user click to delivered <code>.docx</code>.</p>
       <div class="diagram-wrap">
-        <div class="mermaid">
-sequenceDiagram
-    autonumber
-    actor User
-    participant UI as Browser<br/>(GitHub Pages)
-    participant Proxy as Proxy Server<br/>(Render · Node.js)
-    participant MCP as Coda MCP<br/>(coda.io/apis/mcp)
-    participant Coda as Coda Doc<br/>Design & Dev V3
-
-    User->>UI: Enter course code (D945) · Click "Export from CODA"
-    UI->>Proxy: POST /api/course<br/>{ docId, courseCode }
-
-    Proxy->>MCP: table_rows_read · _Courses<br/>filter: RegexMatch("D945")
-    MCP->>Coda: Query course table
-    Coda-->>MCP: Course row
-    MCP-->>Proxy: Course data (slate JSON)
-
-    par Fetch in parallel
-        Proxy->>MCP: table_rows_read · _Competencies
-        MCP-->>Proxy: Competency rows
-    and
-        Proxy->>MCP: table_rows_read · _Progs|_Courses pairing
-        MCP-->>Proxy: Pairing row (has CCT/PO refs)
-    end
-
-    par Fetch in parallel
-        Proxy->>MCP: table_rows_read · CCTs (aligned)
-        MCP-->>Proxy: CCT rows
-    and
-        Proxy->>MCP: table_rows_read · POs (aligned)
-        MCP-->>Proxy: PO rows
-    end
-
-    Proxy-->>UI: Clean JSON<br/>{ course, competencies, ccts, pos }
-
-    Note over UI: Build DOCX in-memory<br/>(XML + ZIP, no libraries)
-
-    UI-->>User: Button turns green<br/>"👍 Success! Please Save Your Doc"
-    User->>UI: Click success button
-    UI-->>User: Downloads D945_CCW.docx
-        </div>
+        <div id="diagram-target" class="mermaid-target"></div>
       </div>
     </div>
 
@@ -282,8 +242,52 @@ sequenceDiagram
   </div>
 
   <script>
+    // Define diagram source as a JS string — avoids HTML entity/tag
+    // parsing issues (e.g. "&" and "<br/>") that break inline mermaid blocks.
+    const diagramSource = `
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as Browser (GitHub Pages)
+    participant Proxy as Proxy Server (Render, Node.js)
+    participant MCP as Coda MCP (coda.io/apis/mcp)
+    participant Coda as Coda Doc (Design and Dev V3)
+
+    User->>UI: Enter course code (D945), click Export from CODA
+    UI->>Proxy: POST /api/course { docId, courseCode }
+
+    Proxy->>MCP: table_rows_read on _Courses (RegexMatch filter)
+    MCP->>Coda: Query course table
+    Coda-->>MCP: Course row
+    MCP-->>Proxy: Course data (slate JSON)
+
+    par Fetch in parallel
+        Proxy->>MCP: table_rows_read on _Competencies
+        MCP-->>Proxy: Competency rows
+    and
+        Proxy->>MCP: table_rows_read on PC pairing row
+        MCP-->>Proxy: Pairing row with CCT and PO refs
+    end
+
+    par Fetch in parallel
+        Proxy->>MCP: table_rows_read on aligned CCTs
+        MCP-->>Proxy: CCT rows
+    and
+        Proxy->>MCP: table_rows_read on aligned POs
+        MCP-->>Proxy: PO rows
+    end
+
+    Proxy-->>UI: Clean JSON (course, competencies, ccts, pos)
+
+    Note over UI: Build DOCX in-memory (XML + ZIP, no libraries)
+
+    UI-->>User: Button turns green, Success!
+    User->>UI: Click success button
+    UI-->>User: Downloads D945_CCW.docx
+`;
+
     mermaid.initialize({
-      startOnLoad: true,
+      startOnLoad: false,
       theme: 'base',
       themeVariables: {
         primaryColor: '#dbeafe',
@@ -295,6 +299,18 @@ sequenceDiagram
         fontFamily: 'DM Sans, system-ui, sans-serif',
       }
     });
+
+    // Render explicitly — returns an SVG string we inject into the target div.
+    (async () => {
+      try {
+        const { svg } = await mermaid.render('diagram-svg', diagramSource);
+        document.getElementById('diagram-target').innerHTML = svg;
+      } catch (err) {
+        console.error('Mermaid render failed:', err);
+        document.getElementById('diagram-target').innerHTML =
+          '<p style="color:#991b1b">Diagram failed to render: ' + err.message + '</p>';
+      }
+    })();
   </script>
 </body>
 </html>
