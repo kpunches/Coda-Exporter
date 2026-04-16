@@ -33,6 +33,8 @@ if (!CODA_TOKEN) {
 // Table IDs in the Design & Development V3 doc
 const COURSE_TABLE = "grid-8i2Q6-eoTP";
 const COMP_TABLE   = "grid-VZwiNNkP1B";
+const CCT_TABLE    = "grid-bdbEJT9Kuq";   // _PC | _CCTs
+const PO_TABLE     = "grid-tUkDsBwjVg";   // _Progs | _Courses to _Program Outcomes
 
 // Course-level column IDs
 const CC = {
@@ -47,6 +49,8 @@ const CC = {
   lrStrategy:    "c-lTxHu4kAH6",
   tools:         "c-mrpeRPfccr",
   compRowIds:    "c-g0MhMSRON7",
+  cctRowIds:     "c-6ucKx1qPTM",  // _PC | _CCTs (linked, already filtered to aligned)
+  poRowIds:      "c-jkdSmFgPaR",  // _Progs|_Courses to _Program Outcomes
 };
 
 // Competency-level column IDs
@@ -60,6 +64,13 @@ const KC = {
   scopeNotes: "c-HEZKT1VZvV",
   standards:  "c-TeYyPpbGcv",
   skills:     "c-yB3khbbLqU",
+};
+
+// CCT & PO row column IDs (both tables share this schema)
+const TCT = {
+  theme:       "c-4CuABuCpCx",   // ref → .name
+  aligned:     "c-bBVinldWlI",   // arr of ref → .value[0].name (e.g. "M", "A", "R")
+  description: "c-6nEfa4CN4i",   // plain text (CCT only)
 };
 
 // ─── Value extractors (MCP wraps values in { content: ... }) ─────────────────
@@ -121,6 +132,18 @@ function asSkills(raw) {
     return v.map(r => ({ name: typeof r === "object" ? r.name || "" : String(r) }));
   }
   return [];
+}
+
+// Alignment field: can be "" (not aligned), or an arr of ref with .name = "M"/"A"/"R"/etc.
+function asAligned(raw) {
+  const v = unwrap(raw);
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "object" && v.type === "arr" && Array.isArray(v.value) && v.value[0]) {
+    return v.value[0].name || "";
+  }
+  if (typeof v === "object" && v.name) return v.name;
+  return "";
 }
 
 // ─── Coda MCP caller ─────────────────────────────────────────────────────────
@@ -214,36 +237,69 @@ app.post("/api/course", async (req, res) => {
     const name = asString(cv[CC.courseName]).trim();
     console.log(`       → ${code} — ${name}`);
 
-    // ── Step 2: competency rows ─────────────────────────────────────────────
+    // ── Step 2: competencies, CCTs, POs (in parallel) ───────────────────────
     const compIds = asRelationIds(cv[CC.compRowIds]);
-    console.log(`  2/2  ${compIds.length} competency rows…`);
+    const cctIds  = asRelationIds(cv[CC.cctRowIds]);
+    const poIds   = asRelationIds(cv[CC.poRowIds]);
+    console.log(`  2/2  ${compIds.length} comps · ${cctIds.length} CCTs · ${poIds.length} POs…`);
 
-    let competencies = [];
-    if (compIds.length) {
-      const compResult = await mcpCallTool("table_rows_read", {
-        uri: `coda://docs/${docId}/tables/${COMP_TABLE}`,
-        rowNumbersOrIds: compIds,
-        rowLimit: 100,
-      });
+    const [compRes, cctRes, poRes] = await Promise.all([
+      compIds.length
+        ? mcpCallTool("table_rows_read", {
+            uri: `coda://docs/${docId}/tables/${COMP_TABLE}`,
+            rowNumbersOrIds: compIds,
+            rowLimit: 100,
+          })
+        : Promise.resolve({ rows: [] }),
+      cctIds.length
+        ? mcpCallTool("table_rows_read", {
+            uri: `coda://docs/${docId}/tables/${CCT_TABLE}`,
+            rowNumbersOrIds: cctIds,
+            rowLimit: 100,
+          })
+        : Promise.resolve({ rows: [] }),
+      poIds.length
+        ? mcpCallTool("table_rows_read", {
+            uri: `coda://docs/${docId}/tables/${PO_TABLE}`,
+            rowNumbersOrIds: poIds,
+            rowLimit: 100,
+          })
+        : Promise.resolve({ rows: [] }),
+    ]);
 
-      const compRows = compResult.rows || [];
-      competencies = compRows.map(row => {
-        const kv = row.values || {};
-        return {
-          order:      asNumber(kv[KC.order]),
-          titleRaw:   asSlate(kv[KC.titleRaw]),
-          level:      asName(kv[KC.level]),
-          modality:   asName(kv[KC.modality]),
-          rationale:  asString(kv[KC.rationale]),
-          evidence:   asString(kv[KC.evidence]),
-          scopeNotes: asString(kv[KC.scopeNotes]),
-          standards:  asSlate(kv[KC.standards]) || null,
-          skills:     asSkills(kv[KC.skills]),
-        };
-      });
-    }
+    const competencies = (compRes.rows || []).map(row => {
+      const kv = row.values || {};
+      return {
+        order:      asNumber(kv[KC.order]),
+        titleRaw:   asSlate(kv[KC.titleRaw]),
+        level:      asName(kv[KC.level]),
+        modality:   asName(kv[KC.modality]),
+        rationale:  asString(kv[KC.rationale]),
+        evidence:   asString(kv[KC.evidence]),
+        scopeNotes: asString(kv[KC.scopeNotes]),
+        standards:  asSlate(kv[KC.standards]) || null,
+        skills:     asSkills(kv[KC.skills]),
+      };
+    });
 
-    console.log(`  done ${Date.now() - t0}ms — ${competencies.length} comps`);
+    const ccts = (cctRes.rows || []).map(row => {
+      const kv = row.values || {};
+      return {
+        name:        asName(kv[TCT.theme]),
+        description: asString(kv[TCT.description]),
+        aligned:     asAligned(kv[TCT.aligned]),
+      };
+    }).filter(c => c.name);
+
+    const pos = (poRes.rows || []).map(row => {
+      const kv = row.values || {};
+      return {
+        name:    asName(kv[TCT.theme]),
+        aligned: asAligned(kv[TCT.aligned]),
+      };
+    }).filter(p => p.name);
+
+    console.log(`  done ${Date.now() - t0}ms — ${competencies.length} comps · ${ccts.length} CCTs · ${pos.length} POs`);
 
     res.json({
       courseCode:                  code,
@@ -256,6 +312,8 @@ app.post("/api/course", async (req, res) => {
       evidence:                    asSlate(cv[CC.evidence]),
       lrStrategy:                  asSlate(cv[CC.lrStrategy]),
       tools:                       asSlate(cv[CC.tools]),
+      ccts,
+      pos,
       competencies,
     });
   } catch (err) {
