@@ -167,19 +167,39 @@ app.post("/api/course", async (req, res) => {
     const search = courseCode || courseName;
     console.log(`\n[${new Date().toISOString()}] Fetching "${search}" from doc ${docId}`);
 
-    // Build filter — matches the formula the original artifact used
-    const query = courseCode
-      ? `[Course Code].Contains("${courseCode}")`
-      : `[Course Name].Contains("${courseName}")`;
-
     // ── Step 1: course row ──────────────────────────────────────────────────
+    // The Coda REST API's `query` parameter only supports simple `column:value`
+    // exact-match queries (no CFL formulas). To handle trailing spaces and
+    // case variance robustly, we fetch rows and filter in-memory.
     console.log("  1/2  course row…");
-    const courseResp = await codaGet(
-      `/docs/${docId}/tables/${COURSE_TABLE}/rows`,
-      { query, valueFormat: "rich", limit: 1 }
-    );
 
-    const courseRow = (courseResp.items || [])[0];
+    const searchTrim = String(search).trim().toUpperCase();
+    let courseRow = null;
+    let pageToken = null;
+    let pagesChecked = 0;
+
+    do {
+      const resp = await codaGet(
+        `/docs/${docId}/tables/${COURSE_TABLE}/rows`,
+        { valueFormat: "rich", limit: 200, pageToken }
+      );
+
+      const items = resp.items || [];
+      courseRow = items.find(row => {
+        const v = row.values || {};
+        if (courseCode) {
+          const code = asString(v[CC.courseCode]).trim().toUpperCase();
+          return code === searchTrim;
+        } else {
+          const name = asString(v[CC.courseName]).trim().toUpperCase();
+          return name.includes(searchTrim);
+        }
+      });
+
+      pageToken = resp.nextPageToken;
+      pagesChecked++;
+    } while (!courseRow && pageToken && pagesChecked < 10);
+
     if (!courseRow) {
       return res.status(404).json({ error: `Course not found: ${search}` });
     }
