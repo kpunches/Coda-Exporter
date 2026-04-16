@@ -31,10 +31,11 @@ if (!CODA_TOKEN) {
 }
 
 // Table IDs in the Design & Development V3 doc
-const COURSE_TABLE = "grid-8i2Q6-eoTP";
-const COMP_TABLE   = "grid-VZwiNNkP1B";
-const CCT_TABLE    = "grid-bdbEJT9Kuq";   // _PC | _CCTs
-const PO_TABLE     = "grid-tUkDsBwjVg";   // _Progs | _Courses to _Program Outcomes
+const COURSE_TABLE   = "grid-8i2Q6-eoTP";
+const PC_TABLE       = "grid-fEebuvIQBl";   // _Progs | _Courses (program–course pairing)
+const COMP_TABLE     = "grid-VZwiNNkP1B";
+const CCT_TABLE      = "grid-bdbEJT9Kuq";   // _PC | _CCTs
+const PO_TABLE       = "grid-tUkDsBwjVg";   // _Progs | _Courses to _Program Outcomes
 
 // Course-level column IDs
 const CC = {
@@ -49,8 +50,13 @@ const CC = {
   lrStrategy:    "c-lTxHu4kAH6",
   tools:         "c-mrpeRPfccr",
   compRowIds:    "c-g0MhMSRON7",
-  cctRowIds:     "c-6ucKx1qPTM",  // _PC | _CCTs (linked, already filtered to aligned)
-  poRowIds:      "c-jkdSmFgPaR",  // _Progs|_Courses to _Program Outcomes
+  pcPairingIds:  "c-RaxZ4eQJFf",  // refs to PC_TABLE — the bridge to CCTs/POs
+};
+
+// Program–Course pairing row column IDs (PC_TABLE)
+const PC = {
+  cctRowIds: "c-6ucKx1qPTM",      // refs to CCT_TABLE (only aligned ones)
+  poRowIds:  "c-jkdSmFgPaR",      // refs to PO_TABLE
 };
 
 // Competency-level column IDs
@@ -237,13 +243,12 @@ app.post("/api/course", async (req, res) => {
     const name = asString(cv[CC.courseName]).trim();
     console.log(`       → ${code} — ${name}`);
 
-    // ── Step 2: competencies, CCTs, POs (in parallel) ───────────────────────
-    const compIds = asRelationIds(cv[CC.compRowIds]);
-    const cctIds  = asRelationIds(cv[CC.cctRowIds]);
-    const poIds   = asRelationIds(cv[CC.poRowIds]);
-    console.log(`  2/2  ${compIds.length} comps · ${cctIds.length} CCTs · ${poIds.length} POs…`);
+    // ── Step 2: program-course pairing (bridge to CCTs/POs) + competencies ──
+    const compIds       = asRelationIds(cv[CC.compRowIds]);
+    const pcPairingIds  = asRelationIds(cv[CC.pcPairingIds]);
+    console.log(`  2/3  ${compIds.length} comps + ${pcPairingIds.length} PC-pairing rows…`);
 
-    const [compRes, cctRes, poRes] = await Promise.all([
+    const [compRes, pcRes] = await Promise.all([
       compIds.length
         ? mcpCallTool("table_rows_read", {
             uri: `coda://docs/${docId}/tables/${COMP_TABLE}`,
@@ -251,6 +256,24 @@ app.post("/api/course", async (req, res) => {
             rowLimit: 100,
           })
         : Promise.resolve({ rows: [] }),
+      pcPairingIds.length
+        ? mcpCallTool("table_rows_read", {
+            uri: `coda://docs/${docId}/tables/${PC_TABLE}`,
+            rowNumbersOrIds: pcPairingIds,
+            rowLimit: 10,
+          })
+        : Promise.resolve({ rows: [] }),
+    ]);
+
+    // From the first program-course pairing row, get linked CCT and PO row IDs
+    const pcRow = (pcRes.rows || [])[0];
+    const pcv   = pcRow?.values || {};
+    const cctIds = asRelationIds(pcv[PC.cctRowIds]);
+    const poIds  = asRelationIds(pcv[PC.poRowIds]);
+
+    // ── Step 3: CCTs and POs (parallel) ─────────────────────────────────────
+    console.log(`  3/3  ${cctIds.length} CCTs · ${poIds.length} POs…`);
+    const [cctRes, poRes] = await Promise.all([
       cctIds.length
         ? mcpCallTool("table_rows_read", {
             uri: `coda://docs/${docId}/tables/${CCT_TABLE}`,
