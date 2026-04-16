@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCW Document Exporter</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useCallback, useRef } = React;
+
+// ─── SVG Icons ────────────────────────────────────────────────────────────────
+const WGUOwl = () => (
+  <svg width="42" height="42" viewBox="0 0 80 80" fill="none">
+    <ellipse cx="40" cy="44" rx="24" ry="22" fill="#185FA5"/>
+    <ellipse cx="40" cy="42" rx="20" ry="18" fill="#378ADD"/>
+    <ellipse cx="31" cy="36" rx="8" ry="9" fill="#fff"/>
+    <ellipse cx="49" cy="36" rx="8" ry="9" fill="#fff"/>
+    <ellipse cx="31" cy="37" rx="5.5" ry="6" fill="#0C447C"/>
+    <ellipse cx="49" cy="37" rx="5.5" ry="6" fill="#0C447C"/>
+    <ellipse cx="31" cy="37" rx="3" ry="3.5" fill="#fff"/>
+    <ellipse cx="49" cy="37" rx="3" ry="3.5" fill="#fff"/>
+    <ellipse cx="31.8" cy="36.2" rx="1.2" ry="1.2" fill="#0C447C"/>
+    <ellipse cx="49.8" cy="36.2" rx="1.2" ry="1.2" fill="#0C447C"/>
+    <path d="M37 47 Q40 50 43 47" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+    <path d="M38 45 L40 47 L42 45" fill="#FAEEDA" stroke="#E6A020" strokeWidth="0.5"/>
+    <ellipse cx="22" cy="30" rx="5" ry="7" fill="#185FA5" transform="rotate(-20 22 30)"/>
+    <ellipse cx="58" cy="30" rx="5" ry="7" fill="#185FA5" transform="rotate(20 58 30)"/>
+    <path d="M28 58 Q40 65 52 58" fill="#185FA5"/>
+    <ellipse cx="32" cy="58" rx="4" ry="3" fill="#0C447C"/>
+    <ellipse cx="48" cy="58" rx="4" ry="3" fill="#0C447C"/>
+  </svg>
+);
+
+const DocIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <rect x="3" y="1" width="11" height="16" rx="2" fill="#dbeeff" stroke="#3b82f6" strokeWidth="1.2"/>
+    <path d="M10 1v5h4" stroke="#3b82f6" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M6 10h7M6 13h5" stroke="#3b82f6" strokeWidth="1" strokeLinecap="round"/>
+  </svg>
+);
+
+const DownloadIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <path d="M7 1v8M4 7l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M1.5 12.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <circle cx="7.5" cy="7.5" r="7.5" fill="#10b981" opacity=".18"/>
+    <path d="M4.5 7.5l2.5 2.5 4-4" stroke="#059669" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const InfoIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <circle cx="7" cy="7" r="6.5" stroke="#3b82f6" strokeWidth="1"/>
+    <path d="M7 6v4M7 4.5v-.5" stroke="#3b82f6" strokeWidth="1.2" strokeLinecap="round"/>
+  </svg>
+);
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+const DOC_TYPES = [
+  { id: "CCW",  name: "CCW",  full: "Course Competency Worksheet", available: true  },
+  { id: "SSD",  name: "SSD",  full: "Scope & Sequence Doc",        available: false },
+  { id: "CSBD", name: "CSBD", full: "Course Summary / Brief",      available: false },
+];
+
+const STEPS = [
+  { label: "Connecting to Coda" },
+  { label: "Looking up course"  },
+  { label: "Fetching data"      },
+  { label: "Building document"  },
+  { label: "Ready"              },
+];
+
+const STEP_MS = [1200, 2500, 4000, 3000];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc   = s  => String(s || "")
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+// ─── Fetch course data from local Coda proxy server ──────────────────────────
+// The proxy server (server.js) calls Coda's REST API directly with proper auth.
+// No model in the loop — no truncation, no hallucination, no timeouts.
+const PROXY_URL = "https://YOUR-RENDER-URL.onrender.com"; // ← CHANGE THIS to your deployed server URL
+
+async function fetchCourseData(docId, courseCode, courseName, onDebug) {
+  onDebug("Connecting to Coda proxy server…");
+
+  const resp = await fetch(`${PROXY_URL}/api/course`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ docId, courseCode, courseName }),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+    throw new Error(err.error || `Server error: ${resp.status}`);
+  }
+
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error);
+
+  onDebug(`Got: ${data.courseCode} — ${data.courseName}. ${(data.competencies || []).length} competencies. Building document…`);
+
+  return data;
+}
+
+// ─── DOCX generation (pure in-memory XML + ZIP) ───────────────────────────────
+
+// ── XML escape ────────────────────────────────────────────────────────────────
+function esc2(s) {
+  return String(s || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── relMap: tracks hyperlink relationships, seeded after rId1(styles)+rId2(numbering)
+function makeRelMap() { return { nextId: 3, rels: [] }; }
+
+// ── Produces a clickable w:hyperlink element with a registered relationship
+// Defensive: if relMap is missing, falls back to plain blue text
+function xmlHyperlink(displayText, url, relMap) {
+  if (!relMap) return xmlRun(displayText, { color: "0563C1", underline: true });
+  const rId = "rId" + relMap.nextId++;
+  relMap.rels.push({ rId, url });
+  // xmlns:r is declared once on <w:document> root — do NOT redeclare inline or Word chokes
+  return `<w:hyperlink r:id="${rId}"><w:r><w:rPr><w:rStyle w:val="Hyperlink"/><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">${esc2(displayText)}</w:t></w:r></w:hyperlink>`;
+}
+
+// ── Builds the rels XML including all hyperlinks collected during generation
+function buildRelsXml(relMap) {
+  const hlRels = relMap.rels.map(r =>
+    `<Relationship Id="${r.rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${esc2(r.url)}" TargetMode="External"/>`
+  ).join("");
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>${hlRels}</Relationships>`;
+}
+
+// ── Plain text → runs, detecting [text](url) markdown and bare https:// URLs
+function inlineToRuns(text, runOpts, relMap) {
+  const re = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)|(https?:\/\/\S+)/g;
+  let result = "", last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) result += xmlRun(text.slice(last, m.index), runOpts);
+    result += m[1] ? xmlHyperlink(m[1], m[2], relMap) : xmlHyperlink(m[3], m[3], relMap);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) result += xmlRun(text.slice(last), runOpts);
+  return result || xmlRun(text, runOpts);
+}
+
+// ── Base run element
+function xmlRun(text, {bold=false,color="000000",size=18,italic=false,underline=false}={}) {
+  const b = bold      ? "<w:b/><w:bCs/>"        : "";
+  const i = italic    ? "<w:i/><w:iCs/>"         : "";
+  const u = underline ? '<w:u w:val="single"/>'  : "";
+  return `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="${size}"/><w:szCs w:val="${size}"/>${b}${i}${u}<w:color w:val="${color}"/></w:rPr><w:t xml:space="preserve">${esc2(text)}</w:t></w:r>`;
+}
+
+// ── Paragraph element
+function xmlPara(runs, {bullet=false}={}) {
+  const np = bullet ? `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>` : "";
+  return `<w:p><w:pPr>${np}<w:spacing w:after="40"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr></w:pPr>${runs}</w:p>`;
+}
+
+// ── Full slate → XML, with hyperlink support via relMap
+function slateXml(slate, relMap) {
+  if (!slate) return xmlPara(xmlRun(""));
+
+  // Plain string: scan each line for inline hyperlinks
+  if (typeof slate === "string") {
+    const lines = slate.split("\n").map(l => l.trim()).filter(l => l);
+    if (!lines.length) return xmlPara(xmlRun(""));
+    return lines.map(l => xmlPara(inlineToRuns(l, {}, relMap))).join("");
+  }
+
+  const root  = slate.root || slate;
+  const lines = root.children || [];
+  if (!lines.length) return xmlPara(xmlRun(""));
+
+  return lines.map(line => {
+    const isBullet = line.style === "BulletedList";
+    const children = line.children || [];
+
+    // Build runs for this line
+    const runs = children.map(child => {
+      // InlineStructuredValue = Coda hyperlink (urlref type)
+      if (child.type === "InlineStructuredValue") {
+        const v   = child.value || {};
+        const url = v.url  || null;
+        const nm  = v.name || v.url || "";
+        if (url && nm) return xmlHyperlink(nm, url, relMap);
+        return nm ? xmlRun(nm) : "";
+      }
+
+      const text = child.text || "";
+      if (!text) return "";
+
+      const runOpts = { bold: !!child.bold, italic: !!child.italic, underline: !!child.underline };
+
+      // Check for inline plain-text URLs within this run segment
+      if (!child.bold && (text.includes("https://") || text.includes("http://"))) {
+        return inlineToRuns(text, runOpts, relMap);
+      }
+
+      // Bold-before-colon: if not already bold and text contains ": ",
+      // split so everything up to and including the colon is bold
+      // e.g. "Domain 1: (Knowledge..." → bold "Domain 1:" + normal " (Knowledge..."
+      // e.g. "Competency 1.1 Demonstrate..." stays as-is (no colon-space pattern)
+      if (!child.bold && !child.italic) {
+        const colonIdx = text.indexOf(": ");
+        if (colonIdx > 0 && colonIdx < text.length - 2) {
+          const boldPart  = text.slice(0, colonIdx + 1); // up to and including ":"
+          const restPart  = text.slice(colonIdx + 1);    // " rest of text"
+          return xmlRun(boldPart, { bold: true }) + xmlRun(restPart, runOpts);
+        }
+      }
+
+      return xmlRun(text, runOpts);
+    }).join("");
+
+    // Some slate paragraphs embed \n within a single text child (AACN domain blocks)
+    // These already emit as separate line objects from Coda, so just wrap normally
+    if (!runs) return xmlPara(xmlRun(""));
+    return xmlPara(runs, { bullet: isBullet });
+  }).join("") || xmlPara(xmlRun(""));
+}
+
+// ── Parse comp title field (may be slate object or plain string)
+function parseTitle(raw) {
+  let t = "";
+  if (raw && typeof raw === "object" && raw.root) {
+    t = (raw.root.children || [])
+      .flatMap(l => (l.children || []).map(c => c.text || ""))
+      .join("").trim();
+  } else {
+    t = String(raw || "").trim();
+  }
+  const m = t.match(/^(.+?)\.\s{1,2}(The learner.+)$/s);
+  return m ? { title: m[1].trim(), statement: m[2].trim() } : { title: t, statement: "" };
+}
+
+// ── Parse skill name "Category\nTitle\nStatement" into 3 separate parts
+function parseSk(name) {
+  const p = String(name || "").split("\n").map(s => s.trim()).filter(Boolean);
+  return { category: p[0] || "", title: p[1] || "", statement: p[2] || "" };
+}
+
+function buildDocxXml(data, relMap) {
+  const {
+    courseCode="", courseName="", modality="", status="",
+    creditUnits="", scopeNotes, assessmentModalityRationale="",
+    evidence, lrStrategy, tools, competencies=[]
+  } = data;
+
+  const sorted = [...competencies].sort((a,b) => (a.order||0)-(b.order||0));
+
+  const HDR="1F4E79", SUB="2E75B6", LGT="D6E4F0", GRD="F2F7FB", WHT="FFFFFF";
+  const CW=14400, LW=2200, DW=12200, SC=2880, ST=4320, SS=7200;
+
+  const cell = (content, {w=7200,fill=null,colspan=1}={}) => {
+    const shd = fill ? `<w:shd w:val="clear" w:color="auto" w:fill="${fill}"/>` : "";
+    const gs  = colspan>1 ? `<w:gridSpan w:val="${colspan}"/>` : "";
+    return `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${gs}${shd}<w:vAlign w:val="top"/><w:tcMar><w:top w:w="80" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:left w:w="120" w:type="dxa"/><w:right w:w="120" w:type="dxa"/></w:tcMar></w:tcPr>${content}</w:tc>`;
+  };
+
+  const trow = (...cells) => `<w:tr>${cells.join("")}</w:tr>`;
+
+  const tbl = (rows, widths) => {
+    const total = widths.reduce((a,b)=>a+b,0);
+    const grid  = widths.map(w=>`<w:gridCol w:w="${w}"/>`).join("");
+    return `<w:tbl><w:tblPr><w:tblW w:w="${total}" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="4" w:color="9DC3E6"/><w:left w:val="single" w:sz="4" w:color="9DC3E6"/><w:bottom w:val="single" w:sz="4" w:color="9DC3E6"/><w:right w:val="single" w:sz="4" w:color="9DC3E6"/><w:insideH w:val="single" w:sz="4" w:color="9DC3E6"/><w:insideV w:val="single" w:sz="4" w:color="9DC3E6"/></w:tblBorders></w:tblPr><w:tblGrid>${grid}</w:tblGrid>${rows.join("")}</w:tbl>`;
+  };
+
+  const hdrRow   = (text,cs,tw) => trow(cell(xmlPara(xmlRun(text,{bold:true,color:WHT,size:18})),{w:tw,fill:HDR,colspan:cs}));
+  const banRow3  = text          => trow(cell(xmlPara(xmlRun(text,{bold:true,color:"1F4E79",size:18})),{w:CW,fill:LGT,colspan:3}));
+  const labelRow = (lbl,xml)     => trow(
+    cell(xmlPara(xmlRun(lbl,{bold:true,color:"1F4E79",size:18})),{w:LW,fill:LGT}),
+    cell(xml,{w:DW})
+  );
+  const labelRow3 = (lbl,xml)    => trow(
+    cell(xmlPara(xmlRun(lbl,{bold:true,color:"1F4E79",size:18})),{w:LW,fill:LGT}),
+    cell(xml,{w:DW,colspan:2})
+  );
+
+  const body = [];
+
+  // Title block
+  body.push(xmlPara(xmlRun(`${courseCode} – ${courseName}`,{bold:true,color:HDR,size:28})));
+  body.push(xmlPara(xmlRun(`Modality: ${modality}  |  Status: ${status}  |  Credit Units: ${creditUnits}`,{color:"444444",size:20})));
+  body.push(xmlPara(xmlRun("")));
+
+  // Course Level Scope Notes — full slate, may be very long with bullets, AACN domains etc.
+  body.push(tbl([
+    hdrRow("Course Level Scope Notes",2,CW),
+    labelRow("Scope Notes", slateXml(scopeNotes, relMap)),
+  ],[LW,DW]));
+  body.push(xmlPara(xmlRun("")));
+
+  // Course Level Assessment Strategy
+  // Modality Rationale is plain text with \n separators
+  const asmtParas = (assessmentModalityRationale||"").split("\n")
+    .filter(l=>l.trim())
+    .map(l => xmlPara(inlineToRuns(l.trim(), {}, relMap)))
+    .join("");
+  body.push(tbl([
+    hdrRow("Course Level Assessment Strategy",2,CW),
+    labelRow("Modality Rationale", asmtParas || xmlPara(xmlRun(""))),
+    labelRow("Evidence", slateXml(evidence, relMap)),
+  ],[LW,DW]));
+  body.push(xmlPara(xmlRun("")));
+
+  // LR Strategy — slate with hyperlinks to SharePoint, LibGuides, EBSCO etc.
+  body.push(tbl([
+    hdrRow("Course Level LR Strategy",2,CW),
+    labelRow("LR Strategy", slateXml(lrStrategy, relMap)),
+  ],[LW,DW]));
+  body.push(xmlPara(xmlRun("")));
+
+  // Tools & Technologies
+  body.push(tbl([
+    hdrRow("Course Level Critical Tools and Technologies",2,CW),
+    labelRow("Tools & Technologies", slateXml(tools, relMap)),
+  ],[LW,DW]));
+  body.push(xmlPara(xmlRun("")));
+
+  // Section heading
+  body.push(xmlPara(xmlRun("Course Competencies and Context Tables",{bold:true,color:HDR,size:24})));
+  body.push(xmlPara(xmlRun("")));
+
+  // One table per competency
+  sorted.forEach((comp, idx) => {
+    const { title, statement } = parseTitle(comp.titleRaw);
+    // Skills: MUST split into 3 separate cells — category | title | statement
+    const skills = (comp.skills || []).map(s => parseSk(s.name));
+    const ht = `Competency ${idx+1} | Title: ${title} | Statement: ${statement} | Target Level: ${comp.level||""}`;
+
+    const rows = [
+      // Header row
+      trow(cell(xmlPara(xmlRun(ht,{bold:true,color:WHT,size:18})),{w:CW,fill:HDR,colspan:3})),
+      // Skills banner
+      banRow3("Skills"),
+      // Skills column headers
+      trow(
+        cell(xmlPara(xmlRun("Skill Category",{bold:true,color:WHT,size:18})),{w:SC,fill:SUB}),
+        cell(xmlPara(xmlRun("Skill Title",{bold:true,color:WHT,size:18})),{w:ST,fill:SUB}),
+        cell(xmlPara(xmlRun("Skill Statement",{bold:true,color:WHT,size:18})),{w:SS,fill:SUB}),
+      ),
+      // One row per skill — 3 SEPARATE cells, never merged
+      ...skills.map(sk => trow(
+        cell(xmlPara(xmlRun(sk.category,{size:18})),{w:SC,fill:GRD}),
+        cell(xmlPara(xmlRun(sk.title,   {size:18})),{w:ST}),
+        cell(xmlPara(xmlRun(sk.statement,{size:18})),{w:SS}),
+      )),
+      // Competency Detail banner
+      banRow3("Competency Detail"),
+      // Assessment recommendations
+      labelRow3("Assessment Recommendations",
+        xmlPara(xmlRun(`Modality: ${comp.modality||""}`,{bold:true,size:18})) +
+        xmlPara(xmlRun(`Rationale: ${comp.rationale||""}`,{size:18})) +
+        xmlPara(xmlRun(`Evidence: ${comp.evidence||""}`,{size:18}))
+      ),
+      // Additional Scope Notes
+      labelRow3("Additional Scope Notes and Requirements",
+        comp.scopeNotes
+          ? xmlPara(inlineToRuns(comp.scopeNotes, {size:18}, relMap))
+          : xmlPara(xmlRun(""))
+      ),
+      // Standards Alignment — slate with AACN Essentials bullets
+      labelRow3("Standards Alignment", slateXml(comp.standards, relMap)),
+    ];
+
+    body.push(tbl(rows, [SC, ST, SS]));
+    if (idx < sorted.length - 1) body.push(xmlPara(xmlRun("")));
+  });
+
+  const docNs = [
+    'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"',
+    'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"',
+    'xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"',
+  ].join(" ");
+
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${docNs}><w:body>${body.join("")}<w:sectPr><w:pgSz w:w="15840" w:h="12240" w:orient="landscape"/><w:pgMar w:top="1080" w:right="720" w:bottom="720" w:left="720" w:header="360" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+}
+
+function crc32(data) {
+  let crc=0xFFFFFFFF;
+  for(let i=0;i<data.length;i++){crc^=data[i];for(let j=0;j<8;j++)crc=(crc>>>1)^(crc&1?0xEDB88320:0);}
+  return (crc^0xFFFFFFFF)>>>0;
+}
+function dosDateTime() {
+  const d=new Date();
+  return {date:((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),time:(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1)};
+}
+function buildZip(files) {
+  const enc=new TextEncoder();
+  const entries=[];
+  let offset=0;
+  for(const [name,content] of Object.entries(files)){
+    const nb=enc.encode(name),db=enc.encode(content);
+    const crc=crc32(db),now=dosDateTime();
+    entries.push({nb,db,crc,size:db.length,offset,...now});
+    offset+=30+nb.length+db.length;
+  }
+  const parts=[];
+  for(const e of entries){
+    const lh=new Uint8Array(30+e.nb.length),lv=new DataView(lh.buffer);
+    lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint16(6,0,true);lv.setUint16(8,0,true);
+    lv.setUint16(10,e.time,true);lv.setUint16(12,e.date,true);lv.setUint32(14,e.crc,true);
+    lv.setUint32(18,e.size,true);lv.setUint32(22,e.size,true);lv.setUint16(26,e.nb.length,true);lv.setUint16(28,0,true);
+    lh.set(e.nb,30);parts.push(lh,e.db);
+  }
+  const cdOff=offset;
+  for(const e of entries){
+    const cd=new Uint8Array(46+e.nb.length),cv=new DataView(cd.buffer);
+    cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);
+    cv.setUint16(8,0,true);cv.setUint16(10,0,true);cv.setUint16(12,e.time,true);cv.setUint16(14,e.date,true);
+    cv.setUint32(16,e.crc,true);cv.setUint32(20,e.size,true);cv.setUint32(24,e.size,true);
+    cv.setUint16(28,e.nb.length,true);cv.setUint16(30,0,true);cv.setUint16(32,0,true);
+    cv.setUint16(34,0,true);cv.setUint16(36,0,true);cv.setUint32(38,0,true);cv.setUint32(42,e.offset,true);
+    cd.set(e.nb,46);parts.push(cd);offset+=cd.length;
+  }
+  const cdSize=offset-cdOff;
+  const eocd=new Uint8Array(22),ev=new DataView(eocd.buffer);
+  ev.setUint32(0,0x06054b50,true);ev.setUint16(4,0,true);ev.setUint16(6,0,true);
+  ev.setUint16(8,entries.length,true);ev.setUint16(10,entries.length,true);
+  ev.setUint32(12,cdSize,true);ev.setUint32(16,cdOff,true);ev.setUint16(20,0,true);
+  parts.push(eocd);
+  const total=parts.reduce((a,b)=>a+b.length,0);
+  const result=new Uint8Array(total);let pos=0;
+  for(const p of parts){result.set(p,pos);pos+=p.length;}
+  return result;
+}
+
+function makeDocx(data) {
+  // relMap must be created ONCE and passed through all XML builders
+  // so every hyperlink gets a unique rId registered in the rels file
+  const relMap = makeRelMap();
+  const docXml = buildDocxXml(data, relMap);
+
+  return buildZip({
+    "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/></Types>`,
+    "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`,
+    "word/document.xml": docXml,
+    "word/styles.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="character" w:styleId="Hyperlink"><w:name w:val="Hyperlink"/><w:rPr><w:color w:val="0563C1"/><w:u w:val="single"/></w:rPr></w:style></w:styles>`,
+    "word/numbering.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="&#x2022;"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="540" w:hanging="270"/></w:pPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>`,
+    // Dynamic rels — includes all hyperlinks discovered during XML generation
+    "word/_rels/document.xml.rels": buildRelsXml(relMap),
+  });
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;background:linear-gradient(135deg,#e8f0fe 0%,#f0f7ff 40%,#e8f5f0 100%)}
+  .shell{max-width:640px;margin:0 auto;padding:2rem 1rem 3rem}
+  .glass-hdr{background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(240,247,255,.9));border:1px solid rgba(255,255,255,.95);border-radius:16px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:14px;margin-bottom:1.25rem;box-shadow:0 2px 16px rgba(59,130,246,.09),inset 0 1px 0 rgba(255,255,255,.9)}
+  .hdr-title{font-size:16px;font-weight:600;color:#0f172a;letter-spacing:-.01em}
+  .hdr-sub{font-size:12px;color:#64748b;margin-top:2px}
+  .badge{margin-left:auto;font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border:1px solid #6ee7b7;white-space:nowrap}
+  .info-banner{background:linear-gradient(135deg,rgba(219,234,254,.5),rgba(224,242,254,.4));border:1px solid #bfdbfe;border-radius:10px;padding:10px 13px;margin-bottom:1rem;font-size:12px;color:#1e40af;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+  .card{background:linear-gradient(160deg,rgba(255,255,255,.88),rgba(248,252,255,.92));border:1px solid rgba(255,255,255,.96);border-radius:14px;padding:1.25rem 1.375rem;margin-bottom:1rem;box-shadow:0 2px 10px rgba(59,130,246,.07),0 1px 2px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.95)}
+  .clabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:.9rem}
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:.875rem}
+  .field:last-child{margin-bottom:0}
+  .field label{font-size:13px;font-weight:500;color:#1e293b}
+  .hint{font-size:11.5px;color:#94a3b8}
+  .opt{font-weight:400;color:#94a3b8}
+  .irow{display:flex;gap:8px;align-items:center}
+  input[type=text]{width:100%;height:38px;padding:0 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;background:rgba(255,255,255,.92);outline:none;transition:border-color .15s,box-shadow .15s}
+  input[type=text]:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.14)}
+  input[type=text]::placeholder{color:#cbd5e1}
+  input.ok{border-color:#34d399}
+  .pill{display:inline-flex;align-items:center;font-size:11px;font-weight:600;border-radius:20px;padding:3px 10px;white-space:nowrap;letter-spacing:.01em}
+  .pill-g{background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border:1px solid #6ee7b7}
+  .pill-b{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e3a8a;border:1px solid #93c5fd}
+  .pill-gray{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
+  .type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .tbtn{border:1.5px solid #e2e8f0;border-radius:12px;padding:11px 12px;cursor:pointer;background:rgba(255,255,255,.8);text-align:left;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:all .15s}
+  .tbtn:hover:not(:disabled){border-color:#93c5fd;background:linear-gradient(135deg,rgba(219,234,254,.55),rgba(191,219,254,.35));box-shadow:0 2px 8px rgba(59,130,246,.12)}
+  .tbtn.sel{border:2px solid #3b82f6;background:linear-gradient(135deg,rgba(219,234,254,.7),rgba(191,219,254,.5));box-shadow:0 2px 10px rgba(59,130,246,.18)}
+  .tbtn:disabled{opacity:.4;cursor:not-allowed}
+  .tn{font-size:13px;font-weight:600;color:#0f172a}
+  .tf{font-size:11px;color:#64748b;margin-top:2px;line-height:1.3}
+  .ts{margin-top:7px}
+  .confirm{background:linear-gradient(135deg,rgba(219,234,254,.55),rgba(224,242,254,.45));border:1px solid #93c5fd;border-radius:10px;padding:12px 14px;margin-bottom:1rem}
+  .crow{display:flex;gap:8px;margin-bottom:3px}
+  .crow:last-child{margin-bottom:0}
+  .ck{font-size:12px;font-weight:600;color:#1d4ed8;min-width:72px}
+  .cv{font-size:12px;color:#1e40af}
+  .pipeline{margin-bottom:1rem}
+  .pbar-bg{height:6px;border-radius:3px;background:rgba(226,232,240,.8);overflow:hidden;margin-bottom:10px;box-shadow:inset 0 1px 2px rgba(0,0,0,.06)}
+  .pbar-fill{height:6px;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#06b6d4);transition:width .7s cubic-bezier(.4,0,.2,1)}
+  .psteps{display:flex;justify-content:space-between}
+  .pstep{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .pdot{width:8px;height:8px;border-radius:50%;background:#e2e8f0;border:1.5px solid #cbd5e1;transition:all .3s;flex-shrink:0}
+  .pstep.act .pdot{background:#3b82f6;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+  .pstep.done .pdot{background:#10b981;border-color:#10b981}
+  .plabel{font-size:10.5px;color:#94a3b8;text-align:center;line-height:1.2;max-width:70px}
+  .pstep.act .plabel{color:#2563eb;font-weight:500}
+  .pstep.done .plabel{color:#059669}
+  .pmsg{font-size:13px;color:#64748b;text-align:center;margin-top:10px;font-style:italic}
+  @keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
+  .pstep.act .pdot{animation:pdot 1.1s ease infinite}
+  .result-box{background:linear-gradient(135deg,rgba(209,250,229,.65),rgba(167,243,208,.4));border:1px solid #6ee7b7;border-radius:12px;padding:14px;margin-bottom:1rem;box-shadow:0 2px 8px rgba(16,185,129,.1)}
+  .res-title{font-size:13px;font-weight:600;color:#065f46;display:flex;align-items:center;gap:6px;margin-bottom:10px}
+  .file-card{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.87);border:1px solid #a7f3d0;border-radius:10px;padding:11px 12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+  .file-icon{width:36px;height:36px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border:1px solid #93c5fd;display:flex;align-items:center;justify-content:center}
+  .file-info{flex:1;min-width:0}
+  .fname{font-size:13px;font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fmeta{font-size:11px;color:#64748b;margin-top:2px}
+  .save-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;border:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 2px 6px rgba(37,99,235,.35),inset 0 1px 0 rgba(255,255,255,.15);transition:all .15s}
+  .save-btn:hover{background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 3px 10px rgba(37,99,235,.42)}
+  .save-btn:active{transform:scale(.97)}
+  .save-btn.saved{background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 2px 6px rgba(5,150,105,.35);cursor:default}
+  .err-box{background:linear-gradient(135deg,rgba(254,226,226,.7),rgba(252,165,165,.3));border:1px solid #fca5a5;border-radius:10px;padding:11px 14px;margin-bottom:1rem;font-size:13px;color:#991b1b;box-shadow:0 1px 4px rgba(239,68,68,.1)}
+  .retry{cursor:pointer;text-decoration:underline;margin-left:8px;font-weight:500}
+  .export-btn{width:100%;height:44px;border-radius:12px;border:none;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 50%,#1d4ed8 100%);color:#fff;box-shadow:0 3px 10px rgba(37,99,235,.35),0 1px 3px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.15);transition:all .15s}
+  .export-btn:hover:not(:disabled){box-shadow:0 4px 14px rgba(37,99,235,.45);transform:translateY(-1px)}
+  .export-btn:active:not(:disabled){transform:scale(.98) translateY(0)}
+  .export-btn:disabled{opacity:.32;cursor:not-allowed;transform:none;box-shadow:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spinner{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:spin .65s linear infinite;flex-shrink:0}
+  .footer{margin-top:.875rem;font-size:11.5px;color:#94a3b8;display:flex;align-items:center;gap:5px}
+  @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+  .fade{animation:fi .22s ease forwards}
+`;
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
+function App() {
+  const [docId,      setDocId]      = useState("4YIajnJqvo");
+  const [code,       setCode]       = useState("");
+  const [cname,      setCname]      = useState("");
+  const [docType,    setDocType]    = useState("CCW");
+  const [phase,      setPhase]      = useState("idle");
+  const [stepIdx,    setStepIdx]    = useState(-1);
+  const [errMsg,     setErrMsg]     = useState("");
+  const [docxBytes,  setDocxBytes]  = useState(null);
+  const [filename,   setFilename]   = useState("");
+  const [saved,      setSaved]      = useState(false);
+  const [debugLog,   setDebugLog]   = useState([]);
+  const [showDebug,  setShowDebug]  = useState(false);
+  const timerRef = useRef(null);
+
+  const effDocId  = docId.trim() || "4YIajnJqvo";
+  const cleanCode = code.trim().toUpperCase();
+  const cleanName = cname.trim();
+  const hasInput  = cleanCode.length > 0 || cleanName.length > 2;
+  const docCustom = docId.trim() && docId.trim() !== "4YIajnJqvo";
+  const primary   = cleanCode.split(",")[0].trim();
+  const fname     = (primary || "COURSE") + "_" + docType + ".docx";
+
+  const showConfirm = hasInput && phase === "idle";
+  const canExport   = hasInput && phase !== "running";
+
+  const pct = stepIdx < 0 ? 0 : Math.round((stepIdx / (STEPS.length - 1)) * 100);
+
+  function clearStatus() {
+    setPhase("idle"); setStepIdx(-1); setErrMsg("");
+    setDocxBytes(null); setFilename(""); setSaved(false);
+    setDebugLog([]);
+    if (timerRef.current) clearInterval(timerRef.current);
+  }
+
+  function addDebug(msg) {
+    setDebugLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+  }
+
+  function startStepTimer() {
+    let idx = 0;
+    setStepIdx(0);
+    timerRef.current = setInterval(() => {
+      idx++;
+      if (idx < STEPS.length - 1) setStepIdx(idx);
+      else clearInterval(timerRef.current);
+    }, STEP_MS[idx] || 3000);
+  }
+
+  const doExport = useCallback(async () => {
+    if (!canExport) return;
+    clearStatus();
+    setPhase("running");
+    startStepTimer();
+
+    try {
+      // Fetch data from Coda via the local proxy server (no model in the loop)
+      const courseData = await fetchCourseData(effDocId, primary, cleanName, addDebug);
+
+      if (courseData.error) throw new Error(courseData.error);
+
+      if (timerRef.current) clearInterval(timerRef.current);
+      setStepIdx(3); // Building document
+      await sleep(600);
+
+      // Step 4: build docx entirely in the artifact
+      const bytes = makeDocx(courseData);
+      const outName = (courseData.courseCode || primary || "COURSE").trim().replace(/\s+/g,"") + "_" + docType + ".docx";
+
+      setStepIdx(4); // Ready
+      await sleep(300);
+
+      setDocxBytes(bytes);
+      setFilename(outName);
+      setPhase("done");
+
+    } catch(err) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setErrMsg(err.message || "Unexpected error. Please try again.");
+      setPhase("error");
+    }
+  }, [canExport, effDocId, primary, cleanName, docType]);
+
+  function doSave() {
+    if (!docxBytes || saved) return;
+    const blob = new Blob([docxBytes], {type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setSaved(true);
+  }
+
+  const confirmRows = showConfirm ? [
+    ["Doc",    `Design & Development V3 (${effDocId})`],
+    ["Course", cleanCode+(cleanName?` – ${cleanName.length>50?cleanName.slice(0,50)+"…":cleanName}`:"")],
+    ["Type",   `${docType} (Course Competency Worksheet)`],
+    ["Output", fname],
+  ] : null;
+
+  return (
+    <>
+      <style>{css}</style>
+      <div className="shell">
+
+        {/* Header */}
+        <div className="glass-hdr">
+          <WGUOwl/>
+          <div>
+            <div className="hdr-title">CCW Document Exporter</div>
+            <div className="hdr-sub">Design &amp; Development V3 · WGU</div>
+          </div>
+          <span className="badge">CCW ready</span>
+        </div>
+
+        {/* Info banner */}
+        <div className="info-banner fade">
+          <InfoIcon/>
+          <span>Connects to a <strong>local Coda proxy</strong> (localhost:3001) that reads Coda directly — no model in the loop. Run <code>npm start</code> in the project folder first.</span>
+        </div>
+
+        {/* Coda connection */}
+        <div className="card">
+          <div className="clabel">Coda connection</div>
+          <div className="field">
+            <label htmlFor="docid">Doc ID</label>
+            <div className="irow">
+              <input type="text" id="docid" value={docId} placeholder="4YIajnJqvo"
+                onChange={e=>{setDocId(e.target.value);clearStatus();}}
+                className={docCustom?"ok":""}/>
+              <span className={`pill ${docCustom?"pill-b":"pill-g"}`}>{docCustom?"Custom":"Default"}</span>
+            </div>
+            <span className="hint">Leave as-is for Design &amp; Development V3</span>
+          </div>
+        </div>
+
+        {/* Course */}
+        <div className="card">
+          <div className="clabel">Course</div>
+          <div className="field">
+            <label htmlFor="code">Course code</label>
+            <input type="text" id="code" placeholder="D946" value={code}
+              onChange={e=>{setCode(e.target.value);clearStatus();}}
+              className={cleanCode.length>0?"ok":""}/>
+          </div>
+          <div className="field">
+            <label htmlFor="cname">Course name <span className="opt">(optional)</span></label>
+            <input type="text" id="cname" placeholder="Chronic Care Across the Lifespan…" value={cname}
+              onChange={e=>{setCname(e.target.value);clearStatus();}}
+              className={cleanName.length>0?"ok":""}/>
+            <span className="hint">Provide if code is unknown — Claude will search by name</span>
+          </div>
+        </div>
+
+        {/* Document type */}
+        <div className="card">
+          <div className="clabel">Document type</div>
+          <div className="type-grid">
+            {DOC_TYPES.map(dt=>(
+              <button key={dt.id}
+                className={`tbtn${docType===dt.id&&dt.available?" sel":""}`}
+                onClick={()=>dt.available&&setDocType(dt.id)}
+                disabled={!dt.available} aria-pressed={docType===dt.id}>
+                <div className="tn">{dt.name}</div>
+                <div className="tf">{dt.full}</div>
+                <div className="ts"><span className={`pill ${dt.available?"pill-g":"pill-gray"}`}>{dt.available?"Available":"Coming soon"}</span></div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Action card */}
+        <div className="card">
+
+          {/* Confirm summary */}
+          {confirmRows && (
+            <div className="confirm fade">
+              {confirmRows.map(([k,v],i)=>(
+                <div key={k} className="crow" style={{marginBottom:i===confirmRows.length-1?0:3}}>
+                  <span className="ck">{k}</span><span className="cv">{v}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Progress pipeline */}
+          {phase==="running" && (
+            <div className="pipeline fade">
+              <div className="pbar-bg"><div className="pbar-fill" style={{width:`${pct}%`}}/></div>
+              <div className="psteps">
+                {STEPS.map((s,i)=>(
+                  <div key={i} className={`pstep${i<stepIdx?" done":i===stepIdx?" act":""}`}>
+                    <div className="pdot"/>
+                    <div className="plabel">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="pmsg">{stepIdx>=0&&stepIdx<STEPS.length?STEPS[stepIdx].label+"…":"Processing…"}</div>
+            </div>
+          )}
+
+          {/* Error */}
+          {phase==="error" && (
+            <div className="err-box fade">
+              <strong>Export failed:</strong> {errMsg}
+              <span className="retry" onClick={clearStatus}>Try again</span>
+            </div>
+          )}
+
+          {/* Debug panel — always visible when there are logs */}
+          {debugLog.length > 0 && (
+            <div style={{marginBottom:"1rem"}}>
+              <button
+                onClick={()=>setShowDebug(v=>!v)}
+                style={{fontSize:11,color:"#64748b",background:"none",border:"0.5px solid #e2e8f0",borderRadius:6,padding:"3px 10px",cursor:"pointer",marginBottom:4}}>
+                {showDebug ? "▲ Hide" : "▼ Show"} debug log ({debugLog.length} entries)
+              </button>
+              {showDebug && (
+                <div style={{background:"#0f172a",borderRadius:8,padding:"10px 12px",fontFamily:"monospace",fontSize:11,color:"#94a3b8",lineHeight:1.6,maxHeight:200,overflowY:"auto"}}>
+                  {debugLog.map((l,i)=>(
+                    <div key={i} style={{color: l.includes("error") || l.includes("Error") ? "#f87171" : l.includes("complete") || l.includes("Got") ? "#34d399" : "#94a3b8"}}>
+                      {l}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Result */}
+          {phase==="done" && docxBytes && (
+            <div className="result-box fade">
+              <div className="res-title"><CheckIcon/> Document ready</div>
+              <div className="file-card">
+                <div className="file-icon"><DocIcon/></div>
+                <div className="file-info">
+                  <div className="fname">{filename}</div>
+                  <div className="fmeta">Word document · landscape · {docType}</div>
+                </div>
+                <button className={`save-btn${saved?" saved":""}`} onClick={doSave} disabled={saved}>
+                  {saved ? <>✓ Saved</> : <><DownloadIcon/> Save</>}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Export button */}
+          <button className="export-btn" onClick={doExport} disabled={!canExport}>
+            {phase==="running"
+              ? <><div className="spinner"/> Working…</>
+              : <><DownloadIcon/> Export &amp; download</>}
+          </button>
+
+        </div>
+
+        <div className="footer">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5.5" stroke="currentColor" strokeWidth=".8"/><path d="M6 5v3.5M6 4v-.5" stroke="currentColor" strokeWidth=".9" strokeLinecap="round"/></svg>
+          Batch export: comma-separated codes — D945, D946, D947
+        </div>
+
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+  </script>
+</body>
+</html>
