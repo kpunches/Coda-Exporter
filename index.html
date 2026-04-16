@@ -91,7 +91,7 @@ const esc   = s  => String(s || "")
 // ─── Fetch course data from local Coda proxy server ──────────────────────────
 // The proxy server (server.js) calls Coda's REST API directly with proper auth.
 // No model in the loop — no truncation, no hallucination, no timeouts.
-const PROXY_URL = "https://YOUR-RENDER-URL.onrender.com"; // ← CHANGE THIS to your deployed server URL
+const PROXY_URL = "https://coda-exporter.onrender.com"; // Render deployed server
 
 async function fetchCourseData(docId, courseCode, courseName, onDebug) {
   onDebug("Connecting to Coda proxy server…");
