@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WGU Doc Exporter</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='%231a3561'><path d='M46,18 C28,18 16,34 16,54 C16,72 28,84 44,82 C42,74 40,60 40,50 C40,40 42,28 46,18 Z'/><path d='M54,18 C72,18 84,34 84,54 C84,72 72,84 56,82 C58,74 60,60 60,50 C60,40 58,28 54,18 Z'/><path d='M46,40 L54,40 L51,70 L50,75 L49,70 Z'/></g></svg>">
+  <link rel="icon" type="image/png" href="./Owl.png">
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -16,14 +16,7 @@ const { useState, useCallback, useRef } = React;
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 const WGUOwl = () => (
-  <svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    {/* Stylized WGU-style owl: two teardrop halves with central beak */}
-    <g fill="#1a3561">
-      <path d="M46,18 C28,18 16,34 16,54 C16,72 28,84 44,82 C42,74 40,60 40,50 C40,40 42,28 46,18 Z"/>
-      <path d="M54,18 C72,18 84,34 84,54 C84,72 72,84 56,82 C58,74 60,60 60,50 C60,40 58,28 54,18 Z"/>
-      <path d="M46,40 L54,40 L51,70 L50,75 L49,70 Z"/>
-    </g>
-  </svg>
+  <img src="./Owl.png" alt="WGU" width="42" height="42" style={{display:"block",objectFit:"contain"}} />
 );
 
 const ArrowUpIcon = () => (
