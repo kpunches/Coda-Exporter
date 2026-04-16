@@ -146,11 +146,23 @@ async function mcpCallTool(toolName, args) {
     await client.connect(transport);
     const result = await client.callTool({ name: toolName, arguments: args });
 
-    // MCP returns content as [{ type: "text", text: "<json>" }]
+    // MCP returns content as [{ type: "text", text: "<json-or-error>" }]
     const text = result?.content?.[0]?.text;
     if (!text) throw new Error(`Empty MCP response from ${toolName}`);
 
-    const parsed = JSON.parse(text);
+    // If the tool reported an error, surface the error text directly —
+    // it's not valid JSON. Check isError flag AND look for common error prefixes.
+    if (result.isError || /^(Tool |Error |Exception)/i.test(text)) {
+      throw new Error(`MCP ${toolName}: ${text.slice(0, 500)}`);
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (parseErr) {
+      throw new Error(`MCP ${toolName} returned non-JSON: ${text.slice(0, 500)}`);
+    }
+
     if (parsed.error) throw new Error(`MCP ${toolName}: ${parsed.error}`);
 
     // The Coda MCP wraps its result inside { toolName, result: {...} }
