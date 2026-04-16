@@ -100,14 +100,84 @@
 
     /* Mermaid diagram */
     .diagram-wrap{
+      position:relative;
       background:#fafbfc;
       border:1px solid #e5e7eb;
       border-radius:10px;
-      padding:1.5rem;
+      padding:3.5rem 1.5rem 1.5rem 1.5rem;
       margin:1rem 0;
       overflow-x:auto;
     }
     .mermaid{text-align:center}
+
+    /* Fullscreen button */
+    .fs-btn{
+      position:absolute;
+      top:12px;
+      left:12px;
+      z-index:5;
+      display:flex;align-items:center;gap:7px;
+      padding:9px 16px;
+      background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);
+      color:#fff;
+      border:none;
+      border-radius:8px;
+      font-size:13px;
+      font-weight:600;
+      font-family:inherit;
+      cursor:pointer;
+      box-shadow:0 2px 8px rgba(37,99,235,.35),inset 0 1px 0 rgba(255,255,255,.15);
+      transition:all .15s;
+    }
+    .fs-btn:hover{
+      background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);
+      box-shadow:0 4px 14px rgba(37,99,235,.5),inset 0 1px 0 rgba(255,255,255,.15);
+      transform:translateY(-1px);
+    }
+    .fs-btn:active{transform:scale(.97)}
+
+    /* Fullscreen overlay */
+    .fs-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.88);
+      z-index:9999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:1.5rem;
+      animation:fadeIn .18s ease;
+    }
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    .fs-inner{
+      position:relative;
+      background:#fff;
+      border-radius:14px;
+      width:100%;
+      height:100%;
+      padding:3.25rem 1.75rem 1.75rem;
+      overflow:auto;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+    }
+    .fs-close{
+      position:absolute;
+      top:12px;
+      right:12px;
+      display:flex;align-items:center;gap:6px;
+      padding:8px 14px;
+      background:#f3f4f6;
+      color:#1f2937;
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+      font-size:13px;
+      font-weight:600;
+      font-family:inherit;
+      cursor:pointer;
+      transition:all .12s;
+    }
+    .fs-close:hover{background:#e5e7eb;color:#111827}
+    .fs-svg{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+    .fs-svg svg{width:100% !important;height:auto !important;max-width:100%;max-height:calc(100vh - 8rem)}
 
     /* Pills / highlights */
     .pill{
@@ -202,6 +272,12 @@
       <h2>Data flow</h2>
       <p style="color:#6b7280;font-size:13px">From user click to delivered <code>.docx</code>.</p>
       <div class="diagram-wrap">
+        <button class="fs-btn" id="fs-btn" type="button" aria-label="Expand diagram to full screen">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 5V2h3M12 5V2H9M2 9v3h3M12 9v3H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Expand to full screen
+        </button>
         <div id="diagram-target" class="mermaid-target"></div>
       </div>
     </div>
@@ -311,6 +387,48 @@ sequenceDiagram
           '<p style="color:#991b1b">Diagram failed to render: ' + err.message + '</p>';
       }
     })();
+
+    // Fullscreen toggle — clones the rendered SVG into a modal overlay.
+    // Press Escape or click the backdrop / close button to exit.
+    document.getElementById('fs-btn').addEventListener('click', () => {
+      const target = document.getElementById('diagram-target');
+      const svg = target.querySelector('svg');
+      if (!svg) return;
+
+      // Clone the SVG and strip hardcoded width/height so it scales to fill.
+      const cloned = svg.cloneNode(true);
+      cloned.removeAttribute('width');
+      cloned.removeAttribute('height');
+      cloned.style.maxWidth = '100%';
+      cloned.style.maxHeight = 'calc(100vh - 8rem)';
+
+      const overlay = document.createElement('div');
+      overlay.className = 'fs-overlay';
+      overlay.innerHTML =
+        '<div class="fs-inner">' +
+          '<button class="fs-close" type="button" aria-label="Exit fullscreen">' +
+            '<svg width="12" height="12" viewBox="0 0 12 12" fill="none">' +
+              '<path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
+            '</svg> Close' +
+          '</button>' +
+          '<div class="fs-svg"></div>' +
+        '</div>';
+      overlay.querySelector('.fs-svg').appendChild(cloned);
+
+      const close = () => {
+        overlay.remove();
+        document.removeEventListener('keydown', onKey);
+      };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+
+      overlay.addEventListener('click', (e) => {
+        // Close when clicking the backdrop or the close button itself
+        if (e.target === overlay || e.target.closest('.fs-close')) close();
+      });
+      document.addEventListener('keydown', onKey);
+
+      document.body.appendChild(overlay);
+    });
   </script>
 </body>
 </html>
