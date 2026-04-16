@@ -186,11 +186,15 @@ app.post("/api/course", async (req, res) => {
     const search = courseCode || courseName;
     console.log(`\n[${new Date().toISOString()}] Fetching "${search}" from doc ${docId}`);
 
-    // CFL formula — Trim both sides to handle trailing whitespace in cells
+    // CFL formula — check BOTH columns so it works regardless of which
+    // field the user typed the value into. RegexMatch on ToText() is
+    // whitespace- and case-forgiving for course codes.
     const searchTerm = String(search).trim();
-    const filterFormula = courseCode
-      ? `[Current Course Code].Trim().Upper() = "${searchTerm.toUpperCase()}"`
-      : `[Course Name].Contains("${searchTerm}")`;
+    // Escape regex metacharacters so values with dots, parens etc. still work
+    const regexSafe = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const filterFormula =
+      `[Current Course Code].ToText().RegexMatch("${regexSafe}") OR ` +
+      `[Course Name].Contains("${searchTerm}")`;
 
     // ── Step 1: course row ──────────────────────────────────────────────────
     console.log("  1/2  course row…  filter:", filterFormula);
