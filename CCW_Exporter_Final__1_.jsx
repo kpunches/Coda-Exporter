@@ -75,143 +75,31 @@ const esc   = s  => String(s || "")
   .replace(/&/g,"&amp;").replace(/</g,"&lt;")
   .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
-// ─── Coda MCP fetch via inner Haiku call ──────────────────────────────────────
-// Claude.ai's proxy automatically forwards Coda OAuth — no token needed here.
-async function fetchViaMCP(prompt) {
-  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+// ─── Fetch course data from local Coda proxy server ──────────────────────────
+// The proxy server (server.js) calls Coda's REST API directly with proper auth.
+// No model in the loop — no truncation, no hallucination, no timeouts.
+const PROXY_URL = "http://localhost:3001";
+
+async function fetchCourseData(docId, courseCode, courseName, onDebug) {
+  onDebug("Connecting to Coda proxy server…");
+
+  const resp = await fetch(`${PROXY_URL}/api/course`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 8000,
-      mcp_servers: [{ type: "url", url: "https://coda.io/apis/mcp", name: "coda" }],
-      messages: [{ role: "user", content: prompt }],
-    }),
+    body: JSON.stringify({ docId, courseCode, courseName }),
   });
 
   if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`API error ${resp.status}: ${txt.slice(0, 300)}`);
+    const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+    throw new Error(err.error || `Server error: ${resp.status}`);
   }
 
   const data = await resp.json();
+  if (data.error) throw new Error(data.error);
 
-  // Parse MCP tool results and text separately
-  const toolResults = (data.content || [])
-    .filter(b => b.type === "mcp_tool_result")
-    .map(b => b.content?.[0]?.text || "")
-    .join("\n");
+  onDebug(`Got: ${data.courseCode} — ${data.courseName}. ${(data.competencies || []).length} competencies. Building document…`);
 
-  const textBlocks = (data.content || [])
-    .filter(b => b.type === "text")
-    .map(b => b.text);
-
-  return { toolResults, textBlocks, raw: data.content };
-}
-
-// ─── Fetch structured course data from Coda via MCP ──────────────────────────
-// Uses TWO separate Haiku calls to avoid JSON truncation:
-//   Call 1: course-level fields (large slate objects)
-//   Call 2: competency rows (also potentially large)
-async function fetchCourseData(docId, courseCode, courseName, onDebug) {
-  const searchTerm    = courseCode || courseName;
-  const filterFormula = courseCode
-    ? `[Current Course Code].Contains("${courseCode}")`
-    : `[Course Name].Contains("${courseName}")`;
-
-  // ── Call 1: Course-level fields ──────────────────────────────────────────
-  onDebug("Step 1/2: Fetching course-level fields from Coda…");
-
-  const coursePrompt = `You are a data extraction tool. Use the Coda MCP table_rows_read tool and return ONLY a JSON object.
-
-1. Call table_rows_read on coda://docs/${docId}/tables/grid-8i2Q6-eoTP with filterFormula: ${filterFormula}
-2. From the matched row return this exact JSON. Preserve ALL slate content objects exactly as returned by Coda — do not summarize, truncate, or simplify them.
-
-Return ONLY this JSON object (no markdown, no explanation):
-{
-  "courseRowId": "<the row id>",
-  "courseCode": "<c-sgyJdn2bVc value, trimmed>",
-  "courseName": "<c-nXrSiX6Q7R value, trimmed>",
-  "modality": "<c-sWmJbOaqEx .name>",
-  "status": "<c-HDAq5esByQ .name>",
-  "creditUnits": <c-8oRBhcidnK number>,
-  "scopeNotes": <c-fBcr85YOgL full value as-is — this is a slate object, preserve it entirely>,
-  "assessmentModalityRationale": "<c-k928L_ucpO plain text>",
-  "evidence": <c-XLbFh1-a65 full slate object as-is>,
-  "lrStrategy": <c-lTxHu4kAH6 full slate object as-is>,
-  "tools": <c-mrpeRPfccr full slate object as-is>,
-  "competencyRowIds": ["<each .identifier from c-g0MhMSRON7 .value array>"]
-}
-
-If not found: {"error":"Course not found: ${searchTerm}"}`;
-
-  const courseResult = await fetchViaMCP(coursePrompt);
-  const courseCandidates = [...courseResult.textBlocks, courseResult.toolResults].filter(Boolean);
-
-  let courseData = null;
-  for (const c of courseCandidates) {
-    const start = c.indexOf("{"), end = c.lastIndexOf("}");
-    if (start !== -1 && end > start) {
-      try { courseData = JSON.parse(c.slice(start, end + 1)); break; } catch {}
-    }
-  }
-  if (!courseData) throw new Error("Could not parse course-level data from Coda");
-  if (courseData.error) throw new Error(courseData.error);
-
-  onDebug(`Step 1/2 complete. Got: ${courseData.courseCode} — ${courseData.courseName}. Scope notes type: ${typeof courseData.scopeNotes}. Competencies to fetch: ${(courseData.competencyRowIds||[]).length}`);
-
-  const compIds = courseData.competencyRowIds || [];
-  if (!compIds.length) throw new Error("No competency row IDs found for this course");
-
-  // ── Call 2: Competency rows ───────────────────────────────────────────────
-  onDebug("Step 2/2: Fetching competency rows…");
-
-  const compPrompt = `You are a data extraction tool. Use the Coda MCP table_rows_read tool and return ONLY a JSON array.
-
-Call table_rows_read on coda://docs/${docId}/tables/grid-VZwiNNkP1B with rowNumbersOrIds: ${JSON.stringify(compIds)}
-
-Return ONLY this JSON array (no markdown, no explanation, preserve all slate objects exactly as-is):
-[
-  {
-    "order": <c-lSdUQo1MHL number>,
-    "titleRaw": <c-uOF-EO1Y7l — may be slate object or plain string, return as-is>,
-    "level": "<c-kEEJh01EC8 .name>",
-    "modality": "<c-YfHIST3JLm .name>",
-    "rationale": "<c-kTJHnj27ap plain text>",
-    "evidence": "<c-wQHNTJK75J plain text>",
-    "scopeNotes": "<c-HEZKT1VZvV plain text, empty string if empty>",
-    "standards": <c-TeYyPpbGcv full slate object as-is, null if empty>,
-    "skills": [{"name": "<each .name from c-yB3khbbLqU .value array>"}]
-  }
-]`;
-
-  const compResult = await fetchViaMCP(compPrompt);
-  const compCandidates = [...compResult.textBlocks, compResult.toolResults].filter(Boolean);
-
-  let competencies = null;
-  for (const c of compCandidates) {
-    const start = c.indexOf("["), end = c.lastIndexOf("]");
-    if (start !== -1 && end > start) {
-      try { competencies = JSON.parse(c.slice(start, end + 1)); break; } catch {}
-    }
-  }
-  if (!competencies) throw new Error("Could not parse competency data from Coda");
-
-  onDebug(`Step 2/2 complete. Got ${competencies.length} competencies. Building document…`);
-
-  return {
-    courseCode:                  courseData.courseCode,
-    courseName:                  courseData.courseName,
-    modality:                    courseData.modality,
-    status:                      courseData.status,
-    creditUnits:                 courseData.creditUnits,
-    scopeNotes:                  courseData.scopeNotes,
-    assessmentModalityRationale: courseData.assessmentModalityRationale,
-    evidence:                    courseData.evidence,
-    lrStrategy:                  courseData.lrStrategy,
-    tools:                       courseData.tools,
-    competencies,
-  };
+  return data;
 }
 
 // ─── DOCX generation (pure in-memory XML + ZIP) ───────────────────────────────
@@ -692,8 +580,7 @@ export default function App() {
     startStepTimer();
 
     try {
-      // Step 1–3: fetch data from Coda via inner Haiku + MCP (two separate calls)
-      // Claude.ai proxy automatically forwards your Coda OAuth — no token needed
+      // Fetch data from Coda via the local proxy server (no model in the loop)
       const courseData = await fetchCourseData(effDocId, primary, cleanName, addDebug);
 
       if (courseData.error) throw new Error(courseData.error);
@@ -757,7 +644,7 @@ export default function App() {
         {/* Info banner */}
         <div className="info-banner fade">
           <InfoIcon/>
-          <span>Uses your connected <strong>Coda MCP</strong> — no API keys or tokens needed. Claude reads Coda directly and generates the Word document inside this artifact.</span>
+          <span>Connects to a <strong>local Coda proxy</strong> (localhost:3001) that reads Coda directly — no model in the loop. Run <code>npm start</code> in the project folder first.</span>
         </div>
 
         {/* Coda connection */}
