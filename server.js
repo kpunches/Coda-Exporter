@@ -368,8 +368,11 @@ async function mcpReadAllRows(docId, tableGridId) {
     const args = { uri, rowLimit: 100 };
     if (pageToken) args.pageToken = pageToken;
     const result = await mcpCallTool("table_rows_read", args);
+    if (page === 0) {
+      console.log(`  [pagination] ${tableGridId} unfiltered: keys=${Object.keys(result).join(",")} rows=${(result.rows || []).length}`);
+    }
     allRows.push(...(result.rows || []));
-    pageToken = result.nextPageToken || null;
+    pageToken = result.nextPageToken || result.pageToken || result.nextPageLink || null;
     if (!pageToken) return allRows;
   }
   console.warn(`mcpReadAllRows: hit 50-page safety cap on ${tableGridId}; returning ${allRows.length} rows`);
@@ -391,8 +394,13 @@ async function mcpReadAllFilteredRows(docId, tableGridId, filterFormula) {
     if (result.filterFormulaError) {
       throw new Error(`Coda filter rejected: ${result.filterFormulaError}. Filter: ${filterFormula}`);
     }
+    if (page === 0) {
+      console.log(`  [pagination] ${tableGridId} filtered: keys=${Object.keys(result).join(",")} rows=${(result.rows || []).length}`);
+    }
     allRows.push(...(result.rows || []));
-    pageToken = result.nextPageToken || null;
+    // MCP pagination field name isn't documented anywhere I can find — try the
+    // three common spellings. Whichever one lands wins.
+    pageToken = result.nextPageToken || result.pageToken || result.nextPageLink || null;
     if (!pageToken) return allRows;
   }
   console.warn(`mcpReadAllFilteredRows: hit 50-page cap on ${tableGridId}`);
