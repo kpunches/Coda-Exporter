@@ -730,61 +730,29 @@ app.get("/api/pdow-data", async (req, res) => {
                       || asString(programRow.values[PROGRAMS_NAME_TEXT]).trim();
     console.log(`  program ${programAbbr} → ${programRowId}`);
 
-    // 2a. First wave — all the small / single-page tables we can paginate in one
-    // shot. PCC (332 total) exceeds 100 but MSCSIA's 40 rows happen to be in
-    // the first page; we'll shard if this ever misses rows for a larger program.
+    // 2a. First wave — small tables + course-level junctions (all fit in a
+    // single page of 100). Junctions use the precomputed abbreviation column
+    // per RESUME § Filter breakthrough.
     const junctionFilter1 = `[Program Abbreviated] = "${cflEscape(programAbbr)}"`;  // course-level
     const junctionFilter2 = `[Program Abbreviation] = "${cflEscape(programAbbr)}"`; // comp-level
 
     const [
-      pcRows, baseCourseRows, pccRows, poBaseRows, cctBaseRows,
+      pcRows, baseCourseRows, poBaseRows, cctBaseRows,
       coursePoRows, courseCctRows,
     ] = await Promise.all([
       mcpReadAllRows(docId, PC_TABLE),
       mcpReadAllRows(docId, COURSE_TABLE),
-      mcpReadAllRows(docId, PCC_TABLE),
       mcpReadAllRows(docId, PROGRAM_OUTCOMES_TABLE),
       mcpReadAllRows(docId, CCTS_TABLE),
       mcpReadAllFilteredRows(docId, COURSE_X_PO_TABLE,  junctionFilter1),
       mcpReadAllFilteredRows(docId, COURSE_X_CCT_TABLE, junctionFilter1),
     ]);
 
-    // 2b. Derive PO + CCT row IDs we need — they drive the per-target chunked
-    // reads of the comp junctions next. MCP caps at 100 rows per call and has
-    // no working pagination parameter (probe confirmed), so we can't just
-    // filter `[Program Abbreviation] = "MSCSIA"` on comp_po (200 rows) or
-    // comp_cct (160 rows) and paginate — we'd truncate. Chunking by target
-    // turns each read into ~40 rows / one call.
-    const programPoIds  = poBaseRows
-      .filter(r => extractRefId((r.values || {})[PO_COLS.programRef]) === programRowId)
-      .map(r => r.id || r.rowId);
-    const programCctIds = cctBaseRows
-      .filter(r => extractRefId((r.values || {})[CCT_COLS.programRef]) === programRowId)
-      .map(r => r.id || r.rowId);
-
-    // 2c. Chunked comp_po + comp_cct — one filtered call per target row ID,
-    // all in parallel. Column names per RESUME § filter breakthrough:
-    //   comp × PO    → [Program Outcome]      (ref → PO)
-    //   comp × CCT   → [Cross-Cutting Theme]  (ref → CCT)  (note the hyphen)
-    const [compPoChunks, compCctChunks] = await Promise.all([
-      Promise.all(programPoIds.map(poId =>
-        mcpReadAllFilteredRows(docId, COMP_X_PO_TABLE,
-          `${junctionFilter2} AND RowId([Program Outcome]) = "${poId}"`
-        )
-      )),
-      Promise.all(programCctIds.map(cctId =>
-        mcpReadAllFilteredRows(docId, COMP_X_CCT_TABLE,
-          `${junctionFilter2} AND RowId([Cross-Cutting Theme]) = "${cctId}"`
-        )
-      )),
-    ]);
-    const compPoRows  = compPoChunks.flat();
-    const compCctRows = compCctChunks.flat();
-
-    console.log(`  fetched: ${pcRows.length} PC · ${baseCourseRows.length} courses · ${pccRows.length} PCC · ${poBaseRows.length} POs · ${cctBaseRows.length} CCTs`);
-    console.log(`  junctions: ${coursePoRows.length}/${courseCctRows.length}/${compPoRows.length}/${compCctRows.length} (c×po/c×cct/p×po/p×cct)`);
-
-    // 3. Program outcomes for this program (client-side filter on program ref)
+    // 2b. Filter POs + CCTs to this program (client-side on ref) and derive
+    // names. Names drive the comp-junction shards next — the probe confirmed
+    // `[Program Outcome].ToText() = "<full PO name>"` returns the right slice,
+    // and .ToText() of a ref returns its display column value which for POs
+    // is just the bare name (no "Program Outcome: " prefix).
     const program_outcomes = poBaseRows
       .filter(r => extractRefId((r.values || {})[PO_COLS.programRef]) === programRowId)
       .map(r => ({
@@ -792,16 +760,41 @@ app.get("/api/pdow-data", async (req, res) => {
         name: poNameFromSlate((r.values || {})[PO_COLS.nameSlate]),
         description: poDescriptionFromSlate((r.values || {})[PO_COLS.nameSlate]),
       }));
-
-    // 4. CCTs for this program
     const ccts = cctBaseRows
       .filter(r => extractRefId((r.values || {})[CCT_COLS.programRef]) === programRowId)
       .map(r => ({
-        id:   r.id || r.rowId,
+        id: r.id || r.rowId,
         name: asString((r.values || {})[CCT_COLS.name]).trim(),
         description: asString((r.values || {})[CCT_COLS.description]).trim(),
       }))
       .filter(c => c.name);
+
+    // 2c. Second wave — PCC filtered by program abbreviation (PCC_PROG_CODE
+    // "c-jdZs26VuaI" is plain-text per coda_schema.py; assume display name
+    // "[Program Code]"), plus one chunked read per target ref on each comp
+    // junction so each chunk fits in the 100-row cap.
+    const [pccRows, compPoChunks, compCctChunks] = await Promise.all([
+      mcpReadAllFilteredRows(docId, PCC_TABLE,
+        `[Program Code] = "${cflEscape(programAbbr)}"`),
+      Promise.all(program_outcomes.map(po =>
+        mcpReadAllFilteredRows(docId, COMP_X_PO_TABLE,
+          `${junctionFilter2} AND [Program Outcome].ToText() = "${cflEscape(po.name)}"`
+        )
+      )),
+      Promise.all(ccts.map(cct =>
+        mcpReadAllFilteredRows(docId, COMP_X_CCT_TABLE,
+          `${junctionFilter2} AND [Cross-Cutting Theme].ToText() = "${cflEscape(cct.name)}"`
+        )
+      )),
+    ]);
+    const compPoRows  = compPoChunks.flat();
+    const compCctRows = compCctChunks.flat();
+
+    console.log(`  fetched: ${pcRows.length} PC · ${baseCourseRows.length} courses · ${pccRows.length} PCC · ${poBaseRows.length} POs (${program_outcomes.length} for ${programAbbr}) · ${cctBaseRows.length} CCTs (${ccts.length} for ${programAbbr})`);
+    console.log(`  junctions: ${coursePoRows.length}/${courseCctRows.length}/${compPoRows.length}/${compCctRows.length} (c×po/c×cct/p×po/p×cct)`);
+
+    // 3. program_outcomes + ccts already built above — they drove the comp
+    //    junction shards. Skip straight to course assembly.
 
     // 5. Courses — filter prog_courses by program ref, join to base table
     const baseByRowId = {};
