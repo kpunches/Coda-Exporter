@@ -92,7 +92,21 @@ function asString(raw) {
   const v = unwrap(raw);
   if (v == null) return "";
   if (typeof v === "string") return v;
-  if (typeof v === "object" && v.name) return String(v.name);
+  if (typeof v === "object") {
+    // Ref shape: { name, identifier } — the name is the display text.
+    if (v.name) return String(v.name);
+    // Slate shape: { root: { children: [...] } } — flatten to plain text so
+    // we don't leak "[object Object]" through when a "plain text" column is
+    // actually returned as an empty slate by Coda (seen on scopeNotes).
+    if (v.root && Array.isArray(v.root.children)) {
+      return v.root.children
+        .flatMap(line => (line.children || []).map(c => c.text || ""))
+        .join("")
+        .trim();
+    }
+    // Unknown / empty object → treat as empty rather than stringifying.
+    return "";
+  }
   return String(v);
 }
 

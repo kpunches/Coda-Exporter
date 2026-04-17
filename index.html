@@ -404,12 +404,13 @@ function buildDocxXml(data, relMap) {
         xmlPara(xmlRun(`Rationale: ${comp.rationale||""}`,{size:18})) +
         xmlPara(xmlRun(`Evidence: ${comp.evidence||""}`,{size:18}))
       ),
-      // Additional Scope Notes
-      labelRow3("Additional Scope Notes and Requirements",
-        comp.scopeNotes
-          ? xmlPara(inlineToRuns(comp.scopeNotes, {size:18}, relMap))
-          : xmlPara(xmlRun(""))
-      ),
+      // Additional Scope Notes — skip the row entirely when blank rather than
+      // render an empty cell. Guarded against non-string values so we don't
+      // accidentally stringify a slate object into "[object Object]".
+      ...(typeof comp.scopeNotes === "string" && comp.scopeNotes.trim()
+        ? [labelRow3("Additional Scope Notes and Requirements",
+            xmlPara(inlineToRuns(comp.scopeNotes, {size:18}, relMap)))]
+        : []),
       // Standards Alignment — slate with AACN Essentials bullets
       labelRow3("Standards Alignment", slateXml(comp.standards, relMap)),
     ];
