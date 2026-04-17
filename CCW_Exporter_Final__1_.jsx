@@ -109,54 +109,109 @@ async function fetchViaMCP(prompt) {
   return { toolResults, textBlocks, raw: data.content };
 }
 
+// ─── CFL escape for user input in filterFormula ──────────────────────────────
+// Coda uses double-quoted strings; embedded " and \ must be escaped. Without
+// this, a value like `foo"bar` produces a malformed filter that Coda silently
+// rejects — filterFormulaError populated, rows returned unfiltered (trap #1).
+const cflEscape = s => String(s || "")
+  .replace(/\\/g, "\\\\")
+  .replace(/"/g, '\\"');
+
+// ─── Coda filter traps (from pdow_exporter/RESUME.md) ────────────────────────
+// 1. filterFormulaError is SILENT — table_rows_read still returns rows when a
+//    filter fails to parse. Always surface response.filterFormulaError.
+// 2. Use RowId() — .ID() is NOT a CFL function.
+// 3. "Table back-reference" columns (e.g., `_Progs | _Courses`) look filterable
+//    but aren't scalar; pick a plain text / select / number column instead.
+// 4. Column display name can differ across tables even with matching column
+//    IDs; CFL resolves by display name, not ID. Confirm with document_read.
+
+// ─── Coda table read with filter-error detection ─────────────────────────────
+// Envelope pattern: inner Haiku returns either
+//   { "_filterFormulaError": "<msg>" }         → throw (trap #1)
+//   { "_filterFormulaError": null, "data": null }   → no rows matched
+//   { "_filterFormulaError": null, "data": <shape> } → success
+// Callers pass `responseShape` as a JSON-looking template string describing
+// what fields to extract from the matched rows.
+async function codaTableRead({ docId, gridId, filterFormula, rowIds, responseShape }) {
+  const callLine = filterFormula
+    ? `Call table_rows_read on coda://docs/${docId}/tables/${gridId} with filterFormula: ${filterFormula}`
+    : `Call table_rows_read on coda://docs/${docId}/tables/${gridId} with rowNumbersOrIds: ${JSON.stringify(rowIds || [])}`;
+
+  const prompt = `You are a data extraction tool. Use the Coda MCP table_rows_read tool and return ONLY JSON (no markdown, no commentary).
+
+${callLine}
+
+Response rules (apply in order):
+1. If the tool response contains a non-empty "filterFormulaError" field, return ONLY:
+   {"_filterFormulaError": "<the error string verbatim>"}
+2. If the tool returned zero rows, return ONLY:
+   {"_filterFormulaError": null, "data": null}
+3. Otherwise return ONLY:
+   {"_filterFormulaError": null, "data": ${responseShape}}
+
+Preserve slate objects exactly as returned by Coda — do not summarize, truncate, or simplify them. Do not retry the tool call.`;
+
+  const result = await fetchViaMCP(prompt);
+  const candidates = [...result.textBlocks, result.toolResults].filter(Boolean);
+
+  let parsed = null;
+  for (const c of candidates) {
+    const start = c.indexOf("{"), end = c.lastIndexOf("}");
+    if (start !== -1 && end > start) {
+      try { parsed = JSON.parse(c.slice(start, end + 1)); break; } catch {}
+    }
+  }
+  if (!parsed) throw new Error("Could not parse Coda response");
+
+  if (parsed._filterFormulaError) {
+    throw new Error(`Coda filter rejected: ${parsed._filterFormulaError}. Filter: ${filterFormula || "(none)"}`);
+  }
+
+  return parsed.data; // null if no rows
+}
+
 // ─── Fetch structured course data from Coda via MCP ──────────────────────────
-// Uses TWO separate Haiku calls to avoid JSON truncation:
-//   Call 1: course-level fields (large slate objects)
-//   Call 2: competency rows (also potentially large)
+// Two separate Haiku calls to avoid JSON truncation on large slate objects:
+//   Call 1: course-level fields
+//   Call 2: competency rows
+// Uses codaTableRead() so filterFormulaError is caught rather than silently
+// returning unfiltered results.
 async function fetchCourseData(docId, courseCode, courseName, onDebug) {
-  const searchTerm    = courseCode || courseName;
+  const searchTerm = courseCode || courseName;
+  // NOTE: .Contains() is fuzzy — "D950" also matches "D9500". Acceptable for
+  // free-text input; once the course dropdown lands (Phase 3) this becomes
+  // an exact lookup by row ID. cflEscape guards against quote injection.
   const filterFormula = courseCode
-    ? `[Current Course Code].Contains("${courseCode}")`
-    : `[Course Name].Contains("${courseName}")`;
+    ? `[Current Course Code].Contains("${cflEscape(courseCode)}")`
+    : `[Course Name].Contains("${cflEscape(courseName)}")`;
 
   // ── Call 1: Course-level fields ──────────────────────────────────────────
   onDebug("Step 1/2: Fetching course-level fields from Coda…");
 
-  const coursePrompt = `You are a data extraction tool. Use the Coda MCP table_rows_read tool and return ONLY a JSON object.
+  const courseShape = `{
+    "courseRowId": "<the row id>",
+    "courseCode": "<c-sgyJdn2bVc value, trimmed>",
+    "courseName": "<c-nXrSiX6Q7R value, trimmed>",
+    "modality": "<c-sWmJbOaqEx .name>",
+    "status": "<c-HDAq5esByQ .name>",
+    "creditUnits": <c-8oRBhcidnK number>,
+    "scopeNotes": <c-fBcr85YOgL full value as-is — slate object, preserve it entirely>,
+    "assessmentModalityRationale": "<c-k928L_ucpO plain text>",
+    "evidence": <c-XLbFh1-a65 full slate object as-is>,
+    "lrStrategy": <c-lTxHu4kAH6 full slate object as-is>,
+    "tools": <c-mrpeRPfccr full slate object as-is>,
+    "competencyRowIds": ["<each .identifier from c-g0MhMSRON7 .value array>"]
+  }`;
 
-1. Call table_rows_read on coda://docs/${docId}/tables/grid-8i2Q6-eoTP with filterFormula: ${filterFormula}
-2. From the matched row return this exact JSON. Preserve ALL slate content objects exactly as returned by Coda — do not summarize, truncate, or simplify them.
+  const courseData = await codaTableRead({
+    docId,
+    gridId: "grid-8i2Q6-eoTP",
+    filterFormula,
+    responseShape: courseShape,
+  });
 
-Return ONLY this JSON object (no markdown, no explanation):
-{
-  "courseRowId": "<the row id>",
-  "courseCode": "<c-sgyJdn2bVc value, trimmed>",
-  "courseName": "<c-nXrSiX6Q7R value, trimmed>",
-  "modality": "<c-sWmJbOaqEx .name>",
-  "status": "<c-HDAq5esByQ .name>",
-  "creditUnits": <c-8oRBhcidnK number>,
-  "scopeNotes": <c-fBcr85YOgL full value as-is — this is a slate object, preserve it entirely>,
-  "assessmentModalityRationale": "<c-k928L_ucpO plain text>",
-  "evidence": <c-XLbFh1-a65 full slate object as-is>,
-  "lrStrategy": <c-lTxHu4kAH6 full slate object as-is>,
-  "tools": <c-mrpeRPfccr full slate object as-is>,
-  "competencyRowIds": ["<each .identifier from c-g0MhMSRON7 .value array>"]
-}
-
-If not found: {"error":"Course not found: ${searchTerm}"}`;
-
-  const courseResult = await fetchViaMCP(coursePrompt);
-  const courseCandidates = [...courseResult.textBlocks, courseResult.toolResults].filter(Boolean);
-
-  let courseData = null;
-  for (const c of courseCandidates) {
-    const start = c.indexOf("{"), end = c.lastIndexOf("}");
-    if (start !== -1 && end > start) {
-      try { courseData = JSON.parse(c.slice(start, end + 1)); break; } catch {}
-    }
-  }
-  if (!courseData) throw new Error("Could not parse course-level data from Coda");
-  if (courseData.error) throw new Error(courseData.error);
+  if (!courseData) throw new Error(`Course not found: ${searchTerm}`);
 
   onDebug(`Step 1/2 complete. Got: ${courseData.courseCode} — ${courseData.courseName}. Scope notes type: ${typeof courseData.scopeNotes}. Competencies to fetch: ${(courseData.competencyRowIds||[]).length}`);
 
@@ -166,36 +221,28 @@ If not found: {"error":"Course not found: ${searchTerm}"}`;
   // ── Call 2: Competency rows ───────────────────────────────────────────────
   onDebug("Step 2/2: Fetching competency rows…");
 
-  const compPrompt = `You are a data extraction tool. Use the Coda MCP table_rows_read tool and return ONLY a JSON array.
-
-Call table_rows_read on coda://docs/${docId}/tables/grid-VZwiNNkP1B with rowNumbersOrIds: ${JSON.stringify(compIds)}
-
-Return ONLY this JSON array (no markdown, no explanation, preserve all slate objects exactly as-is):
-[
-  {
-    "order": <c-lSdUQo1MHL number>,
-    "titleRaw": <c-uOF-EO1Y7l — may be slate object or plain string, return as-is>,
-    "level": "<c-kEEJh01EC8 .name>",
-    "modality": "<c-YfHIST3JLm .name>",
-    "rationale": "<c-kTJHnj27ap plain text>",
-    "evidence": "<c-wQHNTJK75J plain text>",
-    "scopeNotes": "<c-HEZKT1VZvV plain text, empty string if empty>",
-    "standards": <c-TeYyPpbGcv full slate object as-is, null if empty>,
-    "skills": [{"name": "<each .name from c-yB3khbbLqU .value array>"}]
-  }
-]`;
-
-  const compResult = await fetchViaMCP(compPrompt);
-  const compCandidates = [...compResult.textBlocks, compResult.toolResults].filter(Boolean);
-
-  let competencies = null;
-  for (const c of compCandidates) {
-    const start = c.indexOf("["), end = c.lastIndexOf("]");
-    if (start !== -1 && end > start) {
-      try { competencies = JSON.parse(c.slice(start, end + 1)); break; } catch {}
+  const compShape = `[
+    {
+      "order": <c-lSdUQo1MHL number>,
+      "titleRaw": <c-uOF-EO1Y7l — may be slate object or plain string, return as-is>,
+      "level": "<c-kEEJh01EC8 .name>",
+      "modality": "<c-YfHIST3JLm .name>",
+      "rationale": "<c-kTJHnj27ap plain text>",
+      "evidence": "<c-wQHNTJK75J plain text>",
+      "scopeNotes": "<c-HEZKT1VZvV plain text, empty string if empty>",
+      "standards": <c-TeYyPpbGcv full slate object as-is, null if empty>,
+      "skills": [{"name": "<each .name from c-yB3khbbLqU .value array>"}]
     }
-  }
-  if (!competencies) throw new Error("Could not parse competency data from Coda");
+  ]`;
+
+  const competencies = await codaTableRead({
+    docId,
+    gridId: "grid-VZwiNNkP1B",
+    rowIds: compIds,
+    responseShape: compShape,
+  });
+
+  if (!competencies || !Array.isArray(competencies)) throw new Error("Could not parse competency data from Coda");
 
   onDebug(`Step 2/2 complete. Got ${competencies.length} competencies. Building document…`);
 
