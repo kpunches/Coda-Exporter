@@ -359,51 +359,29 @@ function poDescriptionFromSlate(raw) {
 // The Coda MCP's table_rows_read tool silently strips unknown args (probed
 // exhaustively — see commit history). It returns hasMore + totalRows but no
 // page token / offset / cursor. Only rowLimit (≤100) and filterFormula are
-// honored. So we paginate via CFL itself: add `AND RowId() > "<lastSeenId>"`
-// on every call after the first, using the max rowId from the previous page
-// as the cursor. Deduplication by rowId guards against the MCP returning
-// overlapping sets if its internal ordering disagrees with string order on
-// rowIds.
+// honored. A RowId(thisRow) cursor filter compiles but the MCP returns rows
+// in an order that doesn't correlate with rowId lex order — so the cursor
+// ends up at the absolute-max rowId on page 1 and page 2 finds nothing.
+//
+// For tables ≤100 rows this is a non-issue; just fetch a single page. For
+// larger tables (PCC, the alignment junctions) the caller is expected to
+// shard via filterFormula (e.g. chunking by target ref so each chunk is
+// under 100 rows). See fetchPdowData for the actual usage.
 
 async function mcpReadAllRows(docId, tableGridId, baseFilter = null) {
   const uri = `coda://docs/${docId}/tables/${tableGridId}`;
-  const allRows = [];
-  const seen = new Set();
-  let lastMaxId = "";
-  for (let page = 0; page < 50; page++) {
-    const clauses = [];
-    if (baseFilter)  clauses.push(`(${baseFilter})`);
-    // RowId(thisRow) (explicit row arg) parses in CFL; `thisRow.RowId()` did
-    // too but returned null/empty for every row, silently filtering everything
-    // out. See commit history for the probe chain.
-    if (lastMaxId)   clauses.push(`RowId(thisRow) > "${lastMaxId}"`);
-    const args = { uri, rowLimit: 100 };
-    if (clauses.length) args.filterFormula = clauses.join(" AND ");
-    const result = await mcpCallTool("table_rows_read", args);
-    if (result.filterFormulaError) {
-      throw new Error(`Coda filter rejected: ${result.filterFormulaError}. Filter: ${args.filterFormula}`);
-    }
-    const rawRows = result.rows || [];
-    const newRows = rawRows.filter(r => {
-      const id = r.id || r.rowId;
-      if (seen.has(id)) return false;
-      seen.add(id);
-      return true;
-    });
-    // Log every page so we can see pagination progress past page 0.
-    console.log(`  [pagination] ${tableGridId} ${baseFilter ? "filtered" : "unfiltered"} p${page}: total=${result.totalRows} hasMore=${result.hasMore} raw=${rawRows.length} new=${newRows.length} cursor=${lastMaxId || "(none)"}`);
-    allRows.push(...newRows);
-    // Stop conditions: server says no more, OR this page added no new rows
-    // (would infinite-loop otherwise), OR we've collected everything.
-    if (!result.hasMore || newRows.length === 0) return allRows;
-    if (result.totalRows && allRows.length >= result.totalRows) return allRows;
-    // Advance cursor: max rowId from this page (string lex order; rowIds are
-    // "i-<base64-ish>" — lex order is consistent with insertion order for the
-    // same Coda session).
-    lastMaxId = rawRows.map(r => r.id || r.rowId).sort().slice(-1)[0] || lastMaxId;
+  const args = { uri, rowLimit: 100 };
+  if (baseFilter) args.filterFormula = baseFilter;
+  const result = await mcpCallTool("table_rows_read", args);
+  if (result.filterFormulaError) {
+    throw new Error(`Coda filter rejected: ${result.filterFormulaError}. Filter: ${baseFilter}`);
   }
-  console.warn(`mcpReadAllRows: hit 50-page safety cap on ${tableGridId}; returning ${allRows.length} rows`);
-  return allRows;
+  const rows = result.rows || [];
+  console.log(`  [read] ${tableGridId} ${baseFilter ? "filtered" : "unfiltered"}: total=${result.totalRows} hasMore=${result.hasMore} rows=${rows.length}`);
+  if (result.hasMore) {
+    console.warn(`  [read] ${tableGridId} truncated — table has ${result.totalRows} rows but MCP only returned ${rows.length}. Caller must shard via filterFormula.`);
+  }
+  return rows;
 }
 
 // Filtered variant — just mcpReadAllRows with a baseFilter. Kept as a named
@@ -752,13 +730,15 @@ app.get("/api/pdow-data", async (req, res) => {
                       || asString(programRow.values[PROGRAMS_NAME_TEXT]).trim();
     console.log(`  program ${programAbbr} → ${programRowId}`);
 
-    // 2. Parallel fetches (8 reads, all paginated where needed)
+    // 2a. First wave — all the small / single-page tables we can paginate in one
+    // shot. PCC (332 total) exceeds 100 but MSCSIA's 40 rows happen to be in
+    // the first page; we'll shard if this ever misses rows for a larger program.
     const junctionFilter1 = `[Program Abbreviated] = "${cflEscape(programAbbr)}"`;  // course-level
     const junctionFilter2 = `[Program Abbreviation] = "${cflEscape(programAbbr)}"`; // comp-level
 
     const [
       pcRows, baseCourseRows, pccRows, poBaseRows, cctBaseRows,
-      coursePoRows, courseCctRows, compPoRows, compCctRows,
+      coursePoRows, courseCctRows,
     ] = await Promise.all([
       mcpReadAllRows(docId, PC_TABLE),
       mcpReadAllRows(docId, COURSE_TABLE),
@@ -767,9 +747,39 @@ app.get("/api/pdow-data", async (req, res) => {
       mcpReadAllRows(docId, CCTS_TABLE),
       mcpReadAllFilteredRows(docId, COURSE_X_PO_TABLE,  junctionFilter1),
       mcpReadAllFilteredRows(docId, COURSE_X_CCT_TABLE, junctionFilter1),
-      mcpReadAllFilteredRows(docId, COMP_X_PO_TABLE,    junctionFilter2),
-      mcpReadAllFilteredRows(docId, COMP_X_CCT_TABLE,   junctionFilter2),
     ]);
+
+    // 2b. Derive PO + CCT row IDs we need — they drive the per-target chunked
+    // reads of the comp junctions next. MCP caps at 100 rows per call and has
+    // no working pagination parameter (probe confirmed), so we can't just
+    // filter `[Program Abbreviation] = "MSCSIA"` on comp_po (200 rows) or
+    // comp_cct (160 rows) and paginate — we'd truncate. Chunking by target
+    // turns each read into ~40 rows / one call.
+    const programPoIds  = poBaseRows
+      .filter(r => extractRefId((r.values || {})[PO_COLS.programRef]) === programRowId)
+      .map(r => r.id || r.rowId);
+    const programCctIds = cctBaseRows
+      .filter(r => extractRefId((r.values || {})[CCT_COLS.programRef]) === programRowId)
+      .map(r => r.id || r.rowId);
+
+    // 2c. Chunked comp_po + comp_cct — one filtered call per target row ID,
+    // all in parallel. Column names per RESUME § filter breakthrough:
+    //   comp × PO    → [Program Outcome]      (ref → PO)
+    //   comp × CCT   → [Cross-Cutting Theme]  (ref → CCT)  (note the hyphen)
+    const [compPoChunks, compCctChunks] = await Promise.all([
+      Promise.all(programPoIds.map(poId =>
+        mcpReadAllFilteredRows(docId, COMP_X_PO_TABLE,
+          `${junctionFilter2} AND RowId([Program Outcome]) = "${poId}"`
+        )
+      )),
+      Promise.all(programCctIds.map(cctId =>
+        mcpReadAllFilteredRows(docId, COMP_X_CCT_TABLE,
+          `${junctionFilter2} AND RowId([Cross-Cutting Theme]) = "${cctId}"`
+        )
+      )),
+    ]);
+    const compPoRows  = compPoChunks.flat();
+    const compCctRows = compCctChunks.flat();
 
     console.log(`  fetched: ${pcRows.length} PC · ${baseCourseRows.length} courses · ${pccRows.length} PCC · ${poBaseRows.length} POs · ${cctBaseRows.length} CCTs`);
     console.log(`  junctions: ${coursePoRows.length}/${courseCctRows.length}/${compPoRows.length}/${compCctRows.length} (c×po/c×cct/p×po/p×cct)`);
