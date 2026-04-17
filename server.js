@@ -961,21 +961,37 @@ app.get("/api/pdow-data", async (req, res) => {
 // us rowLimit maxes at 100). Hit /api/_probe once and the error text in the
 // response will reveal the accepted schema.
 app.get("/api/_probe", async (req, res) => {
+  // Probe filter syntax for filtering a ref column by the target row ID.
+  // Anchor: comp_x_po table for MSCSIA, trying to narrow from 200 rows down
+  // to just the rows whose Program Outcome is "i-4MSH5Bo8aN" (Cybersecurity
+  // Strategy, the first MSCSIA PO). A correct filter should return ~40 rows.
+  const uri = `coda://docs/4YIajnJqvo/tables/${COMP_X_PO_TABLE}`;
+  const absAbbr = `[Program Abbreviation] = "MSCSIA"`;
+  const poId = "i-4MSH5Bo8aN";
+  const poName = "Cybersecurity Strategy and Risk Management";
   const tests = [
-    { name: "offset_string",   args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1, offset: "not-a-number" } },
-    { name: "skip_string",     args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1, skip: "not-a-number" } },
-    { name: "page_string",     args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1, page: "not-a-number" } },
-    { name: "pageToken_bad",   args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1, pageToken: 12345 } },
-    { name: "bogus_param",     args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1, totallyMadeUp: "xyz" } },
-    { name: "rowLimit_1001",   args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1001 } },
+    { name: "baseline_abbr_only",        filter: absAbbr },
+    { name: "RowId_col",                 filter: `${absAbbr} AND RowId([Program Outcome]) = "${poId}"` },
+    { name: "col_RowId_method",          filter: `${absAbbr} AND [Program Outcome].RowId() = "${poId}"` },
+    { name: "col_eq_id_string",          filter: `${absAbbr} AND [Program Outcome] = "${poId}"` },
+    { name: "col_Name_eq",               filter: `${absAbbr} AND [Program Outcome].Name = "${poName}"` },
+    { name: "col_Name_contains",         filter: `${absAbbr} AND [Program Outcome].Name.Contains("Cybersecurity Strategy")` },
+    { name: "col_ToText_contains",       filter: `${absAbbr} AND [Program Outcome].ToText().Contains("${poId}")` },
+    { name: "col_contains_id",           filter: `${absAbbr} AND [Program Outcome].Contains("${poId}")` },
   ];
   const results = [];
   for (const t of tests) {
     try {
-      const r = await mcpCallTool("table_rows_read", t.args);
-      results.push({ test: t.name, ok: true, hasMore: r.hasMore, totalRows: r.totalRows, rowCount: (r.rows || []).length });
+      const r = await mcpCallTool("table_rows_read", { uri, rowLimit: 1, filterFormula: t.filter });
+      results.push({
+        test: t.name,
+        filter: t.filter,
+        filterFormulaError: r.filterFormulaError || null,
+        totalRows: r.totalRows,
+        hasMore: r.hasMore,
+      });
     } catch (err) {
-      results.push({ test: t.name, ok: false, error: String(err.message).slice(0, 1200) });
+      results.push({ test: t.name, filter: t.filter, error: String(err.message).slice(0, 400) });
     }
   }
   res.json({ results });
