@@ -356,50 +356,57 @@ function poDescriptionFromSlate(raw) {
 }
 
 // ─── Paginated read for tables that may exceed rowLimit (100) ─────────────────
-// Coda MCP caps rowLimit at 100 per call; many tables (prog_courses, PCC,
-// alignment junctions) regularly exceed that. The MCP doesn't return a page
-// token — only `hasMore` + `totalRows` — so we paginate by passing `offset`
-// (skip-N-rows) on each subsequent call. 50-iteration safety cap to avoid
-// runaway loops if hasMore ever fails to flip.
-async function mcpReadAllRows(docId, tableGridId) {
+// The Coda MCP's table_rows_read tool silently strips unknown args (probed
+// exhaustively — see commit history). It returns hasMore + totalRows but no
+// page token / offset / cursor. Only rowLimit (≤100) and filterFormula are
+// honored. So we paginate via CFL itself: add `AND RowId() > "<lastSeenId>"`
+// on every call after the first, using the max rowId from the previous page
+// as the cursor. Deduplication by rowId guards against the MCP returning
+// overlapping sets if its internal ordering disagrees with string order on
+// rowIds.
+async function mcpReadAllRows(docId, tableGridId, baseFilter = null) {
   const uri = `coda://docs/${docId}/tables/${tableGridId}`;
   const allRows = [];
+  const seen = new Set();
+  let lastMaxId = "";
   for (let page = 0; page < 50; page++) {
+    const clauses = [];
+    if (baseFilter)  clauses.push(`(${baseFilter})`);
+    if (lastMaxId)   clauses.push(`RowId() > "${lastMaxId}"`);
     const args = { uri, rowLimit: 100 };
-    if (allRows.length > 0) args.offset = allRows.length;
+    if (clauses.length) args.filterFormula = clauses.join(" AND ");
     const result = await mcpCallTool("table_rows_read", args);
-    if (page === 0) {
-      console.log(`  [pagination] ${tableGridId} unfiltered: total=${result.totalRows} hasMore=${result.hasMore} rows=${(result.rows || []).length}`);
+    if (result.filterFormulaError) {
+      throw new Error(`Coda filter rejected: ${result.filterFormulaError}. Filter: ${args.filterFormula}`);
     }
-    allRows.push(...(result.rows || []));
-    if (!result.hasMore) return allRows;
+    const rawRows = result.rows || [];
+    const newRows = rawRows.filter(r => {
+      const id = r.id || r.rowId;
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+    if (page === 0) {
+      console.log(`  [pagination] ${tableGridId} ${baseFilter ? "filtered" : "unfiltered"}: total=${result.totalRows} hasMore=${result.hasMore} rows=${newRows.length}`);
+    }
+    allRows.push(...newRows);
+    // Stop conditions: server says no more, OR this page added no new rows
+    // (would infinite-loop otherwise), OR we've collected everything.
+    if (!result.hasMore || newRows.length === 0) return allRows;
+    if (result.totalRows && allRows.length >= result.totalRows) return allRows;
+    // Advance cursor: max rowId from this page (string lex order; rowIds are
+    // "i-<base64-ish>" — lex order is consistent with insertion order for the
+    // same Coda session).
+    lastMaxId = rawRows.map(r => r.id || r.rowId).sort().slice(-1)[0] || lastMaxId;
   }
   console.warn(`mcpReadAllRows: hit 50-page safety cap on ${tableGridId}; returning ${allRows.length} rows`);
   return allRows;
 }
 
-// Same as mcpReadAllRows but adds a filterFormula and surfaces filterFormulaError
-// (trap #1) before the rows are returned. Used for the four PDOW alignment
-// junctions — each has a precomputed [Program Abbreviated] / [Program
-// Abbreviation] column that makes this cheap.
+// Filtered variant — just mcpReadAllRows with a baseFilter. Kept as a named
+// helper so the call sites read clearly ("this is the filtered junction read").
 async function mcpReadAllFilteredRows(docId, tableGridId, filterFormula) {
-  const uri = `coda://docs/${docId}/tables/${tableGridId}`;
-  const allRows = [];
-  for (let page = 0; page < 50; page++) {
-    const args = { uri, filterFormula, rowLimit: 100 };
-    if (allRows.length > 0) args.offset = allRows.length;
-    const result = await mcpCallTool("table_rows_read", args);
-    if (result.filterFormulaError) {
-      throw new Error(`Coda filter rejected: ${result.filterFormulaError}. Filter: ${filterFormula}`);
-    }
-    if (page === 0) {
-      console.log(`  [pagination] ${tableGridId} filtered: total=${result.totalRows} hasMore=${result.hasMore} rows=${(result.rows || []).length}`);
-    }
-    allRows.push(...(result.rows || []));
-    if (!result.hasMore) return allRows;
-  }
-  console.warn(`mcpReadAllFilteredRows: hit 50-page cap on ${tableGridId}`);
-  return allRows;
+  return mcpReadAllRows(docId, tableGridId, filterFormula);
 }
 
 // ─── CFL escape for user input in filterFormula ──────────────────────────────
