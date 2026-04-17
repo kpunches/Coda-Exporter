@@ -201,6 +201,41 @@ async function mcpCallTool(toolName, args) {
   }
 }
 
+// ─── CFL escape for user input in filterFormula ──────────────────────────────
+// Coda uses double-quoted strings; embedded " and \ must be escaped. Without
+// this, a value like `foo"bar` produces a malformed filter that Coda silently
+// rejects (→ filterFormulaError populated, rows returned unfiltered — trap #1).
+const cflEscape = s => String(s || "")
+  .replace(/\\/g, "\\\\")
+  .replace(/"/g, '\\"');
+
+// ─── Coda filter traps (from pdow_exporter/RESUME.md) ────────────────────────
+// 1. filterFormulaError is SILENT — table_rows_read still returns rows when a
+//    filter fails to parse. Always check result.filterFormulaError.
+// 2. Use RowId() — .ID() is NOT a CFL function.
+// 3. "Table back-reference" columns (e.g. `_Progs | _Courses`) look filterable
+//    but aren't scalar; pick a plain text / select / number column instead.
+// 4. Column display name can differ across tables even when column IDs match;
+//    CFL resolves by display name, not ID. Confirm per-table via document_read.
+
+// ─── Filtered table read with filter-error detection ─────────────────────────
+// Wraps mcpCallTool for table_rows_read calls that use filterFormula, so trap
+// #1 can't silently return unfiltered rows. For rowNumbersOrIds reads (no
+// filter), keep using mcpCallTool directly — there's no filter to validate.
+async function readFilteredTable({ docId, tableGridId, filterFormula, rowLimit }) {
+  const result = await mcpCallTool("table_rows_read", {
+    uri: `coda://docs/${docId}/tables/${tableGridId}`,
+    filterFormula,
+    rowLimit,
+  });
+
+  if (result.filterFormulaError) {
+    throw new Error(`Coda filter rejected: ${result.filterFormulaError}. Filter: ${filterFormula}`);
+  }
+
+  return result;
+}
+
 // ─── API endpoint ────────────────────────────────────────────────────────────
 
 app.post("/api/course", async (req, res) => {
@@ -220,15 +255,18 @@ app.post("/api/course", async (req, res) => {
     // whitespace- and case-forgiving for course codes.
     const searchTerm = String(search).trim();
     // Escape regex metacharacters so values with dots, parens etc. still work
+    // inside the RegexMatch pattern. cflEscape then handles CFL string quoting
+    // for both halves — same rawSearchTerm, different escape layers.
     const regexSafe = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const filterFormula =
-      `[Current Course Code].ToText().RegexMatch("${regexSafe}") OR ` +
-      `[Course Name].Contains("${searchTerm}")`;
+      `[Current Course Code].ToText().RegexMatch("${cflEscape(regexSafe)}") OR ` +
+      `[Course Name].Contains("${cflEscape(searchTerm)}")`;
 
     // ── Step 1: course row ──────────────────────────────────────────────────
     console.log("  1/2  course row…  filter:", filterFormula);
-    const courseResult = await mcpCallTool("table_rows_read", {
-      uri: `coda://docs/${docId}/tables/${COURSE_TABLE}`,
+    const courseResult = await readFilteredTable({
+      docId,
+      tableGridId: COURSE_TABLE,
       filterFormula,
       rowLimit: 1,
     });
