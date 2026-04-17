@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WGU Doc Exporter — Architecture</title>
+  <link rel="icon" type="image/png" href="./Owl.png">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:'DM Sans',system-ui,sans-serif;
+      background:#ffffff;
+      color:#111827;
+      line-height:1.6;
+      min-height:100vh;
+    }
+    .shell{max-width:860px;margin:0 auto;padding:2.5rem 1.25rem 4rem}
+
+    /* Header */
+    .glass-hdr{
+      background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(240,247,255,.9));
+      border:1px solid rgba(255,255,255,.95);
+      border-radius:16px;
+      padding:1.25rem 1.5rem;
+      display:flex;align-items:center;gap:16px;
+      margin-bottom:2rem;
+      box-shadow:0 8px 24px rgba(15,23,42,.12),0 2px 8px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.9);
+    }
+    .glass-hdr img{width:80px;height:80px;object-fit:contain;display:block}
+    .hdr-title{font-size:18px;font-weight:600;color:#111827;letter-spacing:-.01em}
+    .hdr-sub{font-size:12px;color:#374151;margin-top:2px}
+    .back-link{
+      margin-left:auto;
+      font-size:13px;
+      font-weight:500;
+      color:#1d4ed8;
+      text-decoration:none;
+      padding:6px 14px;
+      border-radius:8px;
+      border:1px solid #bfdbfe;
+      background:rgba(219,234,254,.4);
+      transition:all .15s;
+    }
+    .back-link:hover{background:rgba(219,234,254,.7);border-color:#93c5fd}
+
+    /* Card container */
+    .card{
+      background:#ffffff;
+      border:1px solid rgba(229,231,235,.9);
+      border-radius:14px;
+      padding:1.75rem 2rem;
+      margin-bottom:1.25rem;
+      box-shadow:0 8px 24px rgba(15,23,42,.08),0 2px 8px rgba(15,23,42,.04);
+    }
+
+    /* Typography */
+    h1{font-size:28px;font-weight:700;color:#111827;margin-bottom:.5rem;letter-spacing:-.02em}
+    h2{font-size:20px;font-weight:600;color:#111827;margin-top:1.5rem;margin-bottom:.75rem;letter-spacing:-.01em}
+    h2:first-child{margin-top:0}
+    h3{font-size:15px;font-weight:600;color:#111827;margin-top:1rem;margin-bottom:.4rem}
+    p{color:#374151;margin-bottom:.75rem}
+    ul{margin:.5rem 0 1rem 1.25rem;color:#374151}
+    li{margin-bottom:.35rem}
+    strong{color:#111827;font-weight:600}
+    code{
+      font-family:'SF Mono',Consolas,monospace;
+      font-size:.88em;
+      background:#f3f4f6;
+      padding:1px 6px;
+      border-radius:4px;
+      color:#1f2937;
+    }
+    a{color:#1d4ed8;text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    /* Tables */
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:.75rem 0 1rem;
+      font-size:13px;
+    }
+    th{
+      text-align:left;
+      font-weight:600;
+      color:#111827;
+      background:#f9fafb;
+      padding:10px 12px;
+      border-bottom:2px solid #e5e7eb;
+    }
+    td{
+      padding:10px 12px;
+      border-bottom:1px solid #f3f4f6;
+      color:#374151;
+      vertical-align:top;
+    }
+    tr:last-child td{border-bottom:none}
+
+    /* Mermaid diagram */
+    .diagram-wrap{
+      position:relative;
+      background:#fafbfc;
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      padding:3.5rem 1.5rem 1.5rem 1.5rem;
+      margin:1rem 0;
+      overflow-x:auto;
+    }
+    .mermaid{text-align:center}
+
+    /* Fullscreen button */
+    .fs-btn{
+      position:absolute;
+      top:12px;
+      left:12px;
+      z-index:5;
+      display:flex;align-items:center;gap:7px;
+      padding:9px 16px;
+      background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);
+      color:#fff;
+      border:none;
+      border-radius:8px;
+      font-size:13px;
+      font-weight:600;
+      font-family:inherit;
+      cursor:pointer;
+      box-shadow:0 2px 8px rgba(37,99,235,.35),inset 0 1px 0 rgba(255,255,255,.15);
+      transition:all .15s;
+    }
+    .fs-btn:hover{
+      background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);
+      box-shadow:0 4px 14px rgba(37,99,235,.5),inset 0 1px 0 rgba(255,255,255,.15);
+      transform:translateY(-1px);
+    }
+    .fs-btn:active{transform:scale(.97)}
+
+    /* Fullscreen overlay */
+    .fs-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.88);
+      z-index:9999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:1.5rem;
+      animation:fadeIn .18s ease;
+    }
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    .fs-inner{
+      position:relative;
+      background:#fff;
+      border-radius:14px;
+      width:100%;
+      height:100%;
+      padding:3.25rem 1.75rem 1.75rem;
+      overflow:auto;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+    }
+    .fs-close{
+      position:absolute;
+      top:12px;
+      right:12px;
+      display:flex;align-items:center;gap:6px;
+      padding:8px 14px;
+      background:#f3f4f6;
+      color:#1f2937;
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+      font-size:13px;
+      font-weight:600;
+      font-family:inherit;
+      cursor:pointer;
+      transition:all .12s;
+    }
+    .fs-close:hover{background:#e5e7eb;color:#111827}
+    .fs-svg{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+    .fs-svg svg{width:100% !important;height:auto !important;max-width:100%;max-height:calc(100vh - 8rem)}
+
+    /* Pills / highlights */
+    .pill{
+      display:inline-block;
+      font-size:11px;font-weight:600;
+      padding:2px 9px;border-radius:10px;
+      background:#dbeafe;color:#1e3a8a;border:1px solid #93c5fd;
+    }
+    hr{border:0;border-top:1px solid #e5e7eb;margin:2rem 0}
+
+    .footer{
+      margin-top:1.5rem;
+      padding-top:1rem;
+      font-size:12px;color:#6b7280;
+      border-top:1px solid #f3f4f6;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+
+    <!-- Header -->
+    <div class="glass-hdr">
+      <img src="./Owl.png" alt="WGU">
+      <div>
+        <div class="hdr-title">WGU Doc Exporter</div>
+        <div class="hdr-sub">Architecture · Design &amp; Development V3</div>
+      </div>
+      <a href="./index.html" class="back-link">← Back to app</a>
+    </div>
+
+    <!-- Content -->
+    <div class="card">
+      <h1>Architecture</h1>
+      <p style="color:#6b7280;font-size:13px;margin-bottom:1.5rem">How the WGU Doc Exporter turns a course code into a finished Word document.</p>
+
+      <h2>What it does</h2>
+      <p>The WGU Doc Exporter takes a course code (e.g. <code>D945</code>) and produces a formatted Word document — the full Course Competency Worksheet — in a few seconds. No manual copy/paste, no formatting cleanup.</p>
+
+      <h2>The problem we solved</h2>
+      <p>The original tool routed Coda's data through a language model (Haiku) as a middleman. The large rich-text fields (scope notes, evidence, standards alignment) were too big for the model to echo back reliably — we got timeouts and truncated documents. <strong>The fix was to cut the model out of the data path entirely.</strong></p>
+
+      <h2>The three moving parts</h2>
+
+      <h3>1. The UI — a single HTML page on GitHub Pages</h3>
+      <ul>
+        <li>No build step, no install — anyone with the link can use it</li>
+        <li>All the Word-document assembly actually happens right here in the browser</li>
+        <li>React + Babel loaded from CDN</li>
+      </ul>
+
+      <h3>2. The proxy server — a small Node.js service on Render</h3>
+      <ul>
+        <li>Takes course codes from the UI, talks to Coda, returns clean JSON</li>
+        <li>Stateless, no database, ~250 lines of code</li>
+        <li>Free to run</li>
+      </ul>
+
+      <h3>3. Coda MCP (Model Context Protocol)</h3>
+      <ul>
+        <li>Coda's official structured-data API</li>
+        <li>Supports rich filter formulas — that's how we handle trailing whitespace and case-insensitive matching</li>
+        <li>We use a <strong>readonly</strong> token — the server literally cannot modify Coda</li>
+      </ul>
+
+      <h2>Why it's designed this way</h2>
+      <ul>
+        <li><strong>The browser builds the <code>.docx</code> itself.</strong> We're not shipping 500 KB Word files over the network. The browser assembles the doc from the raw JSON. Fast, no temp-file management, no server-side storage of user data.</li>
+        <li><strong>The server is a thin translator.</strong> Its only job is to know which Coda tables/columns to read and normalize the response. Easy to maintain, easy to extend.</li>
+        <li><strong>Nothing is stored.</strong> Every export pulls fresh data from Coda. No cache to invalidate, no stale documents.</li>
+      </ul>
+
+      <h2>What it costs us</h2>
+      <ul>
+        <li><strong>Free</strong> — GitHub Pages is free, Render's free tier handles this easily, Coda's API is free for your account</li>
+        <li><strong>Trade-off</strong>: Render's free tier sleeps after 15 min idle, so the first export of the day has a ~30 s cold-start delay</li>
+      </ul>
+
+      <h2>What could break it</h2>
+      <ul>
+        <li>Someone renames columns in Coda → server needs a one-line update</li>
+        <li>Token gets revoked or loses readonly permission → exports fail with a clear error message</li>
+        <li>Coda changes their MCP schema (rare) → SDK update</li>
+      </ul>
+
+      <h2>What's next</h2>
+      <p>Easy to add: SSD, CSBD, or any other document type — each one is ~100 lines of XML builder in the UI and some new column mappings in the server. The fetch pipeline doesn't change.</p>
+    </div>
+
+    <!-- Mermaid diagram -->
+    <div class="card">
+      <h2>Data flow</h2>
+      <p style="color:#6b7280;font-size:13px">From user click to delivered <code>.docx</code>.</p>
+      <div class="diagram-wrap">
+        <button class="fs-btn" id="fs-btn" type="button" aria-label="Expand diagram to full screen">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 5V2h3M12 5V2H9M2 9v3h3M12 9v3H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Expand to full screen
+        </button>
+        <div id="diagram-target" class="mermaid-target"></div>
+      </div>
+    </div>
+
+    <!-- Component detail -->
+    <div class="card">
+      <h2>Component detail</h2>
+      <table>
+        <thead>
+          <tr><th>Layer</th><th>Where it lives</th><th>Language</th><th>Responsibility</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>UI</td><td><code>index.html</code> on GitHub Pages</td><td>React (CDN) + Babel (CDN)</td><td>Take user input, POST to proxy, assemble DOCX, trigger download</td></tr>
+          <tr><td>Proxy</td><td><code>server.js</code> on Render</td><td>Node.js (ESM)</td><td>Receive POST, call Coda MCP, normalize data, return JSON</td></tr>
+          <tr><td>Data</td><td>Coda doc <code>4YIajnJqvo</code></td><td>Coda tables &amp; formulas</td><td>Source of truth for courses, competencies, CCTs, POs</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Coda tables used</h3>
+      <table>
+        <thead>
+          <tr><th>Purpose</th><th>Grid ID</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Courses</td><td><code>grid-8i2Q6-eoTP</code></td><td>Course row with scope notes, evidence, LR strategy, tools</td></tr>
+          <tr><td>Program–Course pairing</td><td><code>grid-fEebuvIQBl</code></td><td>The bridge that maps a course to its aligned CCTs and POs</td></tr>
+          <tr><td>Competencies</td><td><code>grid-VZwiNNkP1B</code></td><td>Per-course competency rows with skills, standards, modality</td></tr>
+          <tr><td>Cross-Cutting Themes</td><td><code>grid-bdbEJT9Kuq</code></td><td><code>_PC | _CCTs</code> — one row per (course, theme) pair</td></tr>
+          <tr><td>Program Outcomes</td><td><code>grid-tUkDsBwjVg</code></td><td><code>_Progs | _Courses to _Program Outcomes</code> — one row per (course, outcome) pair</td></tr>
+        </tbody>
+      </table>
+
+      <div class="footer">
+        WGU · Design &amp; Development V3 · Architecture documentation
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Define diagram source as a JS string — avoids HTML entity/tag
+    // parsing issues (e.g. "&" and "<br/>") that break inline mermaid blocks.
+    const diagramSource = `
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as Browser (GitHub Pages)
+    participant Proxy as Proxy Server (Render, Node.js)
+    participant MCP as Coda MCP (coda.io/apis/mcp)
+    participant Coda as Coda Doc (Design and Dev V3)
+
+    User->>UI: Enter course code (D945), click Export from CODA
+    UI->>Proxy: POST /api/course { docId, courseCode }
+
+    Proxy->>MCP: table_rows_read on _Courses (RegexMatch filter)
+    MCP->>Coda: Query course table
+    Coda-->>MCP: Course row
+    MCP-->>Proxy: Course data (slate JSON)
+
+    par Fetch in parallel
+        Proxy->>MCP: table_rows_read on _Competencies
+        MCP-->>Proxy: Competency rows
+    and
+        Proxy->>MCP: table_rows_read on PC pairing row
+        MCP-->>Proxy: Pairing row with CCT and PO refs
+    end
+
+    par Fetch in parallel
+        Proxy->>MCP: table_rows_read on aligned CCTs
+        MCP-->>Proxy: CCT rows
+    and
+        Proxy->>MCP: table_rows_read on aligned POs
+        MCP-->>Proxy: PO rows
+    end
+
+    Proxy-->>UI: Clean JSON (course, competencies, ccts, pos)
+
+    Note over UI: Build DOCX in-memory (XML + ZIP, no libraries)
+
+    UI-->>User: Button turns green, Success!
+    User->>UI: Click success button
+    UI-->>User: Downloads D945_CCW.docx
+`;
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      themeVariables: {
+        primaryColor: '#dbeafe',
+        primaryTextColor: '#1e3a8a',
+        primaryBorderColor: '#93c5fd',
+        lineColor: '#6b7280',
+        secondaryColor: '#f3f4f6',
+        tertiaryColor: '#ffffff',
+        fontFamily: 'DM Sans, system-ui, sans-serif',
+      }
+    });
+
+    // Render explicitly — returns an SVG string we inject into the target div.
+    (async () => {
+      try {
+        const { svg } = await mermaid.render('diagram-svg', diagramSource);
+        document.getElementById('diagram-target').innerHTML = svg;
+      } catch (err) {
+        console.error('Mermaid render failed:', err);
+        document.getElementById('diagram-target').innerHTML =
+          '<p style="color:#991b1b">Diagram failed to render: ' + err.message + '</p>';
+      }
+    })();
+
+    // Fullscreen toggle — clones the rendered SVG into a modal overlay.
+    // Press Escape or click the backdrop / close button to exit.
+    document.getElementById('fs-btn').addEventListener('click', () => {
+      const target = document.getElementById('diagram-target');
+      const svg = target.querySelector('svg');
+      if (!svg) return;
+
+      // Clone the SVG and strip hardcoded width/height so it scales to fill.
+      const cloned = svg.cloneNode(true);
+      cloned.removeAttribute('width');
+      cloned.removeAttribute('height');
+      cloned.style.maxWidth = '100%';
+      cloned.style.maxHeight = 'calc(100vh - 8rem)';
+
+      const overlay = document.createElement('div');
+      overlay.className = 'fs-overlay';
+      overlay.innerHTML =
+        '<div class="fs-inner">' +
+          '<button class="fs-close" type="button" aria-label="Exit fullscreen">' +
+            '<svg width="12" height="12" viewBox="0 0 12 12" fill="none">' +
+              '<path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
+            '</svg> Close' +
+          '</button>' +
+          '<div class="fs-svg"></div>' +
+        '</div>';
+      overlay.querySelector('.fs-svg').appendChild(cloned);
+
+      const close = () => {
+        overlay.remove();
+        document.removeEventListener('keydown', onKey);
+      };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+
+      overlay.addEventListener('click', (e) => {
+        // Close when clicking the backdrop or the close button itself
+        if (e.target === overlay || e.target.closest('.fs-close')) close();
+      });
+      document.addEventListener('keydown', onKey);
+
+      document.body.appendChild(overlay);
+    });
+  </script>
+</body>
+</html>
