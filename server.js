@@ -775,7 +775,7 @@ app.get("/api/pdow-data", async (req, res) => {
     // junction so each chunk fits in the 100-row cap.
     const [pccRows, compPoChunks, compCctChunks] = await Promise.all([
       mcpReadAllFilteredRows(docId, PCC_TABLE,
-        `[Program Code] = "${cflEscape(programAbbr)}"`),
+        `[Program Abbreviation] = "${cflEscape(programAbbr)}"`),
       Promise.all(program_outcomes.map(po =>
         mcpReadAllFilteredRows(docId, COMP_X_PO_TABLE,
           `${junctionFilter2} AND [Program Outcome].ToText() = "${cflEscape(po.name)}"`
