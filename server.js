@@ -364,6 +364,7 @@ function poDescriptionFromSlate(raw) {
 // as the cursor. Deduplication by rowId guards against the MCP returning
 // overlapping sets if its internal ordering disagrees with string order on
 // rowIds.
+
 async function mcpReadAllRows(docId, tableGridId, baseFilter = null) {
   const uri = `coda://docs/${docId}/tables/${tableGridId}`;
   const allRows = [];
@@ -372,7 +373,10 @@ async function mcpReadAllRows(docId, tableGridId, baseFilter = null) {
   for (let page = 0; page < 50; page++) {
     const clauses = [];
     if (baseFilter)  clauses.push(`(${baseFilter})`);
-    if (lastMaxId)   clauses.push(`thisRow.RowId() > "${lastMaxId}"`);
+    // RowId(thisRow) (explicit row arg) parses in CFL; `thisRow.RowId()` did
+    // too but returned null/empty for every row, silently filtering everything
+    // out. See commit history for the probe chain.
+    if (lastMaxId)   clauses.push(`RowId(thisRow) > "${lastMaxId}"`);
     const args = { uri, rowLimit: 100 };
     if (clauses.length) args.filterFormula = clauses.join(" AND ");
     const result = await mcpCallTool("table_rows_read", args);
@@ -386,9 +390,8 @@ async function mcpReadAllRows(docId, tableGridId, baseFilter = null) {
       seen.add(id);
       return true;
     });
-    if (page === 0) {
-      console.log(`  [pagination] ${tableGridId} ${baseFilter ? "filtered" : "unfiltered"}: total=${result.totalRows} hasMore=${result.hasMore} rows=${newRows.length}`);
-    }
+    // Log every page so we can see pagination progress past page 0.
+    console.log(`  [pagination] ${tableGridId} ${baseFilter ? "filtered" : "unfiltered"} p${page}: total=${result.totalRows} hasMore=${result.hasMore} raw=${rawRows.length} new=${newRows.length} cursor=${lastMaxId || "(none)"}`);
     allRows.push(...newRows);
     // Stop conditions: server says no more, OR this page added no new rows
     // (would infinite-loop otherwise), OR we've collected everything.
