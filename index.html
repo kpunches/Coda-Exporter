@@ -1,25 +1,36 @@
-import { useState, useCallback, useRef } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WGU Doc Exporter</title>
+  <link rel="icon" type="image/png" href="./Owl.png">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useCallback, useRef } = React;
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 const WGUOwl = () => (
-  <svg width="42" height="42" viewBox="0 0 80 80" fill="none">
-    <ellipse cx="40" cy="44" rx="24" ry="22" fill="#185FA5"/>
-    <ellipse cx="40" cy="42" rx="20" ry="18" fill="#378ADD"/>
-    <ellipse cx="31" cy="36" rx="8" ry="9" fill="#fff"/>
-    <ellipse cx="49" cy="36" rx="8" ry="9" fill="#fff"/>
-    <ellipse cx="31" cy="37" rx="5.5" ry="6" fill="#0C447C"/>
-    <ellipse cx="49" cy="37" rx="5.5" ry="6" fill="#0C447C"/>
-    <ellipse cx="31" cy="37" rx="3" ry="3.5" fill="#fff"/>
-    <ellipse cx="49" cy="37" rx="3" ry="3.5" fill="#fff"/>
-    <ellipse cx="31.8" cy="36.2" rx="1.2" ry="1.2" fill="#0C447C"/>
-    <ellipse cx="49.8" cy="36.2" rx="1.2" ry="1.2" fill="#0C447C"/>
-    <path d="M37 47 Q40 50 43 47" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-    <path d="M38 45 L40 47 L42 45" fill="#FAEEDA" stroke="#E6A020" strokeWidth="0.5"/>
-    <ellipse cx="22" cy="30" rx="5" ry="7" fill="#185FA5" transform="rotate(-20 22 30)"/>
-    <ellipse cx="58" cy="30" rx="5" ry="7" fill="#185FA5" transform="rotate(20 58 30)"/>
-    <path d="M28 58 Q40 65 52 58" fill="#185FA5"/>
-    <ellipse cx="32" cy="58" rx="4" ry="3" fill="#0C447C"/>
-    <ellipse cx="48" cy="58" rx="4" ry="3" fill="#0C447C"/>
+  <img src="./Owl.png" alt="WGU" width="80" height="80" style={{display:"block",objectFit:"contain"}} />
+);
+
+const ArrowUpIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
+    <path d="M7 12V2M3 6l4-4 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const BuildingIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
+    <rect x="2" y="1.5" width="7" height="9" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+    <path d="M4 5h3M4 7h2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+    <circle cx="10.5" cy="10" r="2.3" fill="currentColor"/>
+    <circle cx="10.5" cy="10" r="0.9" fill="#fff"/>
   </svg>
 );
 
@@ -75,190 +86,31 @@ const esc   = s  => String(s || "")
   .replace(/&/g,"&amp;").replace(/</g,"&lt;")
   .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
-// ─── Coda MCP fetch via inner Haiku call ──────────────────────────────────────
-// Claude.ai's proxy automatically forwards Coda OAuth — no token needed here.
-async function fetchViaMCP(prompt) {
-  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+// ─── Fetch course data from local Coda proxy server ──────────────────────────
+// The proxy server (server.js) calls Coda's REST API directly with proper auth.
+// No model in the loop — no truncation, no hallucination, no timeouts.
+const PROXY_URL = "https://coda-exporter.onrender.com"; // Render deployed server
+
+async function fetchCourseData(docId, courseCode, courseName, onDebug) {
+  onDebug("Connecting to Coda proxy server…");
+
+  const resp = await fetch(`${PROXY_URL}/api/course`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 8000,
-      mcp_servers: [{ type: "url", url: "https://coda.io/apis/mcp", name: "coda" }],
-      messages: [{ role: "user", content: prompt }],
-    }),
+    body: JSON.stringify({ docId, courseCode, courseName }),
   });
 
   if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`API error ${resp.status}: ${txt.slice(0, 300)}`);
+    const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+    throw new Error(err.error || `Server error: ${resp.status}`);
   }
 
   const data = await resp.json();
+  if (data.error) throw new Error(data.error);
 
-  // Parse MCP tool results and text separately
-  const toolResults = (data.content || [])
-    .filter(b => b.type === "mcp_tool_result")
-    .map(b => b.content?.[0]?.text || "")
-    .join("\n");
+  onDebug(`Got: ${data.courseCode} — ${data.courseName}. ${(data.competencies || []).length} competencies. Building document…`);
 
-  const textBlocks = (data.content || [])
-    .filter(b => b.type === "text")
-    .map(b => b.text);
-
-  return { toolResults, textBlocks, raw: data.content };
-}
-
-// ─── CFL escape for user input in filterFormula ──────────────────────────────
-// Coda uses double-quoted strings; embedded " and \ must be escaped. Without
-// this, a value like `foo"bar` produces a malformed filter that Coda silently
-// rejects — filterFormulaError populated, rows returned unfiltered (trap #1).
-const cflEscape = s => String(s || "")
-  .replace(/\\/g, "\\\\")
-  .replace(/"/g, '\\"');
-
-// ─── Coda filter traps (from pdow_exporter/RESUME.md) ────────────────────────
-// 1. filterFormulaError is SILENT — table_rows_read still returns rows when a
-//    filter fails to parse. Always surface response.filterFormulaError.
-// 2. Use RowId() — .ID() is NOT a CFL function.
-// 3. "Table back-reference" columns (e.g., `_Progs | _Courses`) look filterable
-//    but aren't scalar; pick a plain text / select / number column instead.
-// 4. Column display name can differ across tables even with matching column
-//    IDs; CFL resolves by display name, not ID. Confirm with document_read.
-
-// ─── Coda table read with filter-error detection ─────────────────────────────
-// Envelope pattern: inner Haiku returns either
-//   { "_filterFormulaError": "<msg>" }         → throw (trap #1)
-//   { "_filterFormulaError": null, "data": null }   → no rows matched
-//   { "_filterFormulaError": null, "data": <shape> } → success
-// Callers pass `responseShape` as a JSON-looking template string describing
-// what fields to extract from the matched rows.
-async function codaTableRead({ docId, gridId, filterFormula, rowIds, responseShape }) {
-  const callLine = filterFormula
-    ? `Call table_rows_read on coda://docs/${docId}/tables/${gridId} with filterFormula: ${filterFormula}`
-    : `Call table_rows_read on coda://docs/${docId}/tables/${gridId} with rowNumbersOrIds: ${JSON.stringify(rowIds || [])}`;
-
-  const prompt = `You are a data extraction tool. Use the Coda MCP table_rows_read tool and return ONLY JSON (no markdown, no commentary).
-
-${callLine}
-
-Response rules (apply in order):
-1. If the tool response contains a non-empty "filterFormulaError" field, return ONLY:
-   {"_filterFormulaError": "<the error string verbatim>"}
-2. If the tool returned zero rows, return ONLY:
-   {"_filterFormulaError": null, "data": null}
-3. Otherwise return ONLY:
-   {"_filterFormulaError": null, "data": ${responseShape}}
-
-Preserve slate objects exactly as returned by Coda — do not summarize, truncate, or simplify them. Do not retry the tool call.`;
-
-  const result = await fetchViaMCP(prompt);
-  const candidates = [...result.textBlocks, result.toolResults].filter(Boolean);
-
-  let parsed = null;
-  for (const c of candidates) {
-    const start = c.indexOf("{"), end = c.lastIndexOf("}");
-    if (start !== -1 && end > start) {
-      try { parsed = JSON.parse(c.slice(start, end + 1)); break; } catch {}
-    }
-  }
-  if (!parsed) throw new Error("Could not parse Coda response");
-
-  if (parsed._filterFormulaError) {
-    throw new Error(`Coda filter rejected: ${parsed._filterFormulaError}. Filter: ${filterFormula || "(none)"}`);
-  }
-
-  return parsed.data; // null if no rows
-}
-
-// ─── Fetch structured course data from Coda via MCP ──────────────────────────
-// Two separate Haiku calls to avoid JSON truncation on large slate objects:
-//   Call 1: course-level fields
-//   Call 2: competency rows
-// Uses codaTableRead() so filterFormulaError is caught rather than silently
-// returning unfiltered results.
-async function fetchCourseData(docId, courseCode, courseName, onDebug) {
-  const searchTerm = courseCode || courseName;
-  // NOTE: .Contains() is fuzzy — "D950" also matches "D9500". Acceptable for
-  // free-text input; once the course dropdown lands (Phase 3) this becomes
-  // an exact lookup by row ID. cflEscape guards against quote injection.
-  const filterFormula = courseCode
-    ? `[Current Course Code].Contains("${cflEscape(courseCode)}")`
-    : `[Course Name].Contains("${cflEscape(courseName)}")`;
-
-  // ── Call 1: Course-level fields ──────────────────────────────────────────
-  onDebug("Step 1/2: Fetching course-level fields from Coda…");
-
-  const courseShape = `{
-    "courseRowId": "<the row id>",
-    "courseCode": "<c-sgyJdn2bVc value, trimmed>",
-    "courseName": "<c-nXrSiX6Q7R value, trimmed>",
-    "modality": "<c-sWmJbOaqEx .name>",
-    "status": "<c-HDAq5esByQ .name>",
-    "creditUnits": <c-8oRBhcidnK number>,
-    "scopeNotes": <c-fBcr85YOgL full value as-is — slate object, preserve it entirely>,
-    "assessmentModalityRationale": "<c-k928L_ucpO plain text>",
-    "evidence": <c-XLbFh1-a65 full slate object as-is>,
-    "lrStrategy": <c-lTxHu4kAH6 full slate object as-is>,
-    "tools": <c-mrpeRPfccr full slate object as-is>,
-    "competencyRowIds": ["<each .identifier from c-g0MhMSRON7 .value array>"]
-  }`;
-
-  const courseData = await codaTableRead({
-    docId,
-    gridId: "grid-8i2Q6-eoTP",
-    filterFormula,
-    responseShape: courseShape,
-  });
-
-  if (!courseData) throw new Error(`Course not found: ${searchTerm}`);
-
-  onDebug(`Step 1/2 complete. Got: ${courseData.courseCode} — ${courseData.courseName}. Scope notes type: ${typeof courseData.scopeNotes}. Competencies to fetch: ${(courseData.competencyRowIds||[]).length}`);
-
-  const compIds = courseData.competencyRowIds || [];
-  if (!compIds.length) throw new Error("No competency row IDs found for this course");
-
-  // ── Call 2: Competency rows ───────────────────────────────────────────────
-  onDebug("Step 2/2: Fetching competency rows…");
-
-  const compShape = `[
-    {
-      "order": <c-lSdUQo1MHL number>,
-      "titleRaw": <c-uOF-EO1Y7l — may be slate object or plain string, return as-is>,
-      "level": "<c-kEEJh01EC8 .name>",
-      "modality": "<c-YfHIST3JLm .name>",
-      "rationale": "<c-kTJHnj27ap plain text>",
-      "evidence": "<c-wQHNTJK75J plain text>",
-      "scopeNotes": "<c-HEZKT1VZvV plain text, empty string if empty>",
-      "standards": <c-TeYyPpbGcv full slate object as-is, null if empty>,
-      "skills": [{"name": "<each .name from c-yB3khbbLqU .value array>"}]
-    }
-  ]`;
-
-  const competencies = await codaTableRead({
-    docId,
-    gridId: "grid-VZwiNNkP1B",
-    rowIds: compIds,
-    responseShape: compShape,
-  });
-
-  if (!competencies || !Array.isArray(competencies)) throw new Error("Could not parse competency data from Coda");
-
-  onDebug(`Step 2/2 complete. Got ${competencies.length} competencies. Building document…`);
-
-  return {
-    courseCode:                  courseData.courseCode,
-    courseName:                  courseData.courseName,
-    modality:                    courseData.modality,
-    status:                      courseData.status,
-    creditUnits:                 courseData.creditUnits,
-    scopeNotes:                  courseData.scopeNotes,
-    assessmentModalityRationale: courseData.assessmentModalityRationale,
-    evidence:                    courseData.evidence,
-    lrStrategy:                  courseData.lrStrategy,
-    tools:                       courseData.tools,
-    competencies,
-  };
+  return data;
 }
 
 // ─── DOCX generation (pure in-memory XML + ZIP) ───────────────────────────────
@@ -405,7 +257,7 @@ function buildDocxXml(data, relMap) {
   const {
     courseCode="", courseName="", modality="", status="",
     creditUnits="", scopeNotes, assessmentModalityRationale="",
-    evidence, lrStrategy, tools, competencies=[]
+    evidence, lrStrategy, tools, ccts=[], pos=[], competencies=[]
   } = data;
 
   const sorted = [...competencies].sort((a,b) => (a.order||0)-(b.order||0));
@@ -478,6 +330,46 @@ function buildDocxXml(data, relMap) {
     labelRow("Tools & Technologies", slateXml(tools, relMap)),
   ],[LW,DW]));
   body.push(xmlPara(xmlRun("")));
+
+  // Cross Cutting Themes — only emitted when there's data
+  if (ccts && ccts.length) {
+    // widths: Theme | Description | Aligned
+    const CW_T = 3600, CW_D = 9000, CW_A = 1800;
+    const cctRows = [
+      trow(cell(xmlPara(xmlRun("Course Level Cross Cutting Themes",{bold:true,color:WHT,size:18})),{w:CW,fill:HDR,colspan:3})),
+      trow(
+        cell(xmlPara(xmlRun("Cross Cutting Theme",{bold:true,color:WHT,size:18})),{w:CW_T,fill:SUB}),
+        cell(xmlPara(xmlRun("Description",{bold:true,color:WHT,size:18})),{w:CW_D,fill:SUB}),
+        cell(xmlPara(xmlRun("Aligned",{bold:true,color:WHT,size:18})),{w:CW_A,fill:SUB}),
+      ),
+      ...ccts.map(c => trow(
+        cell(xmlPara(xmlRun(c.name||"",{size:18})),{w:CW_T,fill:GRD}),
+        cell(xmlPara(xmlRun(c.description||"",{size:18})),{w:CW_D}),
+        cell(xmlPara(xmlRun(c.aligned||"",{bold:true,size:18})),{w:CW_A}),
+      )),
+    ];
+    body.push(tbl(cctRows, [CW_T, CW_D, CW_A]));
+    body.push(xmlPara(xmlRun("")));
+  }
+
+  // Program Outcomes — only emitted when there's data
+  if (pos && pos.length) {
+    // widths: Name | Aligned
+    const PW_N = 12600, PW_A = 1800;
+    const poRows = [
+      trow(cell(xmlPara(xmlRun("Course Level Program Outcomes",{bold:true,color:WHT,size:18})),{w:CW,fill:HDR,colspan:2})),
+      trow(
+        cell(xmlPara(xmlRun("Program Outcome",{bold:true,color:WHT,size:18})),{w:PW_N,fill:SUB}),
+        cell(xmlPara(xmlRun("Aligned",{bold:true,color:WHT,size:18})),{w:PW_A,fill:SUB}),
+      ),
+      ...pos.map(p => trow(
+        cell(xmlPara(xmlRun(p.name||"",{size:18})),{w:PW_N,fill:GRD}),
+        cell(xmlPara(xmlRun(p.aligned||"",{bold:true,size:18})),{w:PW_A}),
+      )),
+    ];
+    body.push(tbl(poRows, [PW_N, PW_A]));
+    body.push(xmlPara(xmlRun("")));
+  }
 
   // Section heading
   body.push(xmlPara(xmlRun("Course Competencies and Context Tables",{bold:true,color:HDR,size:24})));
@@ -610,18 +502,17 @@ const css = `
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;background:linear-gradient(135deg,#e8f0fe 0%,#f0f7ff 40%,#e8f5f0 100%)}
   .shell{max-width:640px;margin:0 auto;padding:2rem 1rem 3rem}
-  .glass-hdr{background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(240,247,255,.9));border:1px solid rgba(255,255,255,.95);border-radius:16px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:14px;margin-bottom:1.25rem;box-shadow:0 2px 16px rgba(59,130,246,.09),inset 0 1px 0 rgba(255,255,255,.9)}
-  .hdr-title{font-size:16px;font-weight:600;color:#0f172a;letter-spacing:-.01em}
-  .hdr-sub{font-size:12px;color:#64748b;margin-top:2px}
+  .glass-hdr{background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(240,247,255,.9));border:1px solid rgba(255,255,255,.95);border-radius:16px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:14px;margin-bottom:1.25rem;box-shadow:0 8px 24px rgba(15,23,42,.12),0 2px 8px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.9)}
+  .hdr-title{font-size:16px;font-weight:600;color:#111827;letter-spacing:-.01em}
+  .hdr-sub{font-size:12px;color:#374151;margin-top:2px}
   .badge{margin-left:auto;font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border:1px solid #6ee7b7;white-space:nowrap}
-  .info-banner{background:linear-gradient(135deg,rgba(219,234,254,.5),rgba(224,242,254,.4));border:1px solid #bfdbfe;border-radius:10px;padding:10px 13px;margin-bottom:1rem;font-size:12px;color:#1e40af;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
-  .card{background:linear-gradient(160deg,rgba(255,255,255,.88),rgba(248,252,255,.92));border:1px solid rgba(255,255,255,.96);border-radius:14px;padding:1.25rem 1.375rem;margin-bottom:1rem;box-shadow:0 2px 10px rgba(59,130,246,.07),0 1px 2px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.95)}
-  .clabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:.9rem}
+  .card{background:linear-gradient(160deg,rgba(255,255,255,.88),rgba(248,252,255,.92));border:1px solid rgba(255,255,255,.96);border-radius:14px;padding:1.25rem 1.375rem;margin-bottom:1rem;box-shadow:0 8px 24px rgba(15,23,42,.12),0 2px 8px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.95)}
+  .clabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#374151;margin-bottom:.9rem}
   .field{display:flex;flex-direction:column;gap:5px;margin-bottom:.875rem}
   .field:last-child{margin-bottom:0}
-  .field label{font-size:13px;font-weight:500;color:#1e293b}
-  .hint{font-size:11.5px;color:#94a3b8}
-  .opt{font-weight:400;color:#94a3b8}
+  .field label{font-size:13px;font-weight:500;color:#111827}
+  .hint{font-size:11.5px;color:#374151}
+  .opt{font-weight:400;color:#6b7280}
   .irow{display:flex;gap:8px;align-items:center}
   input[type=text]{width:100%;height:38px;padding:0 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;background:rgba(255,255,255,.92);outline:none;transition:border-color .15s,box-shadow .15s}
   input[type=text]:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.14)}
@@ -636,14 +527,14 @@ const css = `
   .tbtn:hover:not(:disabled){border-color:#93c5fd;background:linear-gradient(135deg,rgba(219,234,254,.55),rgba(191,219,254,.35));box-shadow:0 2px 8px rgba(59,130,246,.12)}
   .tbtn.sel{border:2px solid #3b82f6;background:linear-gradient(135deg,rgba(219,234,254,.7),rgba(191,219,254,.5));box-shadow:0 2px 10px rgba(59,130,246,.18)}
   .tbtn:disabled{opacity:.4;cursor:not-allowed}
-  .tn{font-size:13px;font-weight:600;color:#0f172a}
-  .tf{font-size:11px;color:#64748b;margin-top:2px;line-height:1.3}
+  .tn{font-size:13px;font-weight:600;color:#111827}
+  .tf{font-size:11px;color:#374151;margin-top:2px;line-height:1.3}
   .ts{margin-top:7px}
   .confirm{background:linear-gradient(135deg,rgba(219,234,254,.55),rgba(224,242,254,.45));border:1px solid #93c5fd;border-radius:10px;padding:12px 14px;margin-bottom:1rem}
   .crow{display:flex;gap:8px;margin-bottom:3px}
   .crow:last-child{margin-bottom:0}
   .ck{font-size:12px;font-weight:600;color:#1d4ed8;min-width:72px}
-  .cv{font-size:12px;color:#1e40af}
+  .cv{font-size:12px;color:#374151}
   .pipeline{margin-bottom:1rem}
   .pbar-bg{height:6px;border-radius:3px;background:rgba(226,232,240,.8);overflow:hidden;margin-bottom:10px;box-shadow:inset 0 1px 2px rgba(0,0,0,.06)}
   .pbar-fill{height:6px;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#06b6d4);transition:width .7s cubic-bezier(.4,0,.2,1)}
@@ -655,35 +546,27 @@ const css = `
   .plabel{font-size:10.5px;color:#94a3b8;text-align:center;line-height:1.2;max-width:70px}
   .pstep.act .plabel{color:#2563eb;font-weight:500}
   .pstep.done .plabel{color:#059669}
-  .pmsg{font-size:13px;color:#64748b;text-align:center;margin-top:10px;font-style:italic}
+  .pmsg{font-size:13px;color:#374151;text-align:center;margin-top:10px;font-style:italic}
   @keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
   .pstep.act .pdot{animation:pdot 1.1s ease infinite}
-  .result-box{background:linear-gradient(135deg,rgba(209,250,229,.65),rgba(167,243,208,.4));border:1px solid #6ee7b7;border-radius:12px;padding:14px;margin-bottom:1rem;box-shadow:0 2px 8px rgba(16,185,129,.1)}
-  .res-title{font-size:13px;font-weight:600;color:#065f46;display:flex;align-items:center;gap:6px;margin-bottom:10px}
-  .file-card{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.87);border:1px solid #a7f3d0;border-radius:10px;padding:11px 12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
-  .file-icon{width:36px;height:36px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border:1px solid #93c5fd;display:flex;align-items:center;justify-content:center}
-  .file-info{flex:1;min-width:0}
-  .fname{font-size:13px;font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .fmeta{font-size:11px;color:#64748b;margin-top:2px}
-  .save-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;border:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 2px 6px rgba(37,99,235,.35),inset 0 1px 0 rgba(255,255,255,.15);transition:all .15s}
-  .save-btn:hover{background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 3px 10px rgba(37,99,235,.42)}
-  .save-btn:active{transform:scale(.97)}
-  .save-btn.saved{background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 2px 6px rgba(5,150,105,.35);cursor:default}
   .err-box{background:linear-gradient(135deg,rgba(254,226,226,.7),rgba(252,165,165,.3));border:1px solid #fca5a5;border-radius:10px;padding:11px 14px;margin-bottom:1rem;font-size:13px;color:#991b1b;box-shadow:0 1px 4px rgba(239,68,68,.1)}
   .retry{cursor:pointer;text-decoration:underline;margin-left:8px;font-weight:500}
-  .export-btn{width:100%;height:44px;border-radius:12px;border:none;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 50%,#1d4ed8 100%);color:#fff;box-shadow:0 3px 10px rgba(37,99,235,.35),0 1px 3px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.15);transition:all .15s}
+  .export-btn{width:100%;height:52px;border-radius:12px;border:none;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 50%,#1d4ed8 100%);color:#fff;box-shadow:0 3px 10px rgba(37,99,235,.35),0 1px 3px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.15);transition:all .2s}
   .export-btn:hover:not(:disabled){box-shadow:0 4px 14px rgba(37,99,235,.45);transform:translateY(-1px)}
   .export-btn:active:not(:disabled){transform:scale(.98) translateY(0)}
-  .export-btn:disabled{opacity:.32;cursor:not-allowed;transform:none;box-shadow:none}
+  .export-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .export-btn.success{background:linear-gradient(135deg,#bbf7d0 0%,#86efac 50%,#4ade80 100%);color:#14532d;box-shadow:0 3px 10px rgba(74,222,128,.4),0 1px 3px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.4)}
+  .export-btn.success:hover:not(:disabled){box-shadow:0 5px 16px rgba(74,222,128,.55);transform:translateY(-1px)}
+  .export-btn.saved{background:linear-gradient(135deg,#10b981,#059669);color:#fff;cursor:default;opacity:.9}
   @keyframes spin{to{transform:rotate(360deg)}}
   .spinner{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:spin .65s linear infinite;flex-shrink:0}
-  .footer{margin-top:.875rem;font-size:11.5px;color:#94a3b8;display:flex;align-items:center;gap:5px}
+  .footer{margin-top:.875rem;font-size:11.5px;color:#6b7280;display:flex;align-items:center;gap:5px}
   @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
   .fade{animation:fi .22s ease forwards}
 `;
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
-export default function App() {
+function App() {
   const [docId,      setDocId]      = useState("4YIajnJqvo");
   const [code,       setCode]       = useState("");
   const [cname,      setCname]      = useState("");
@@ -739,8 +622,7 @@ export default function App() {
     startStepTimer();
 
     try {
-      // Step 1–3: fetch data from Coda via inner Haiku + MCP (two separate calls)
-      // Claude.ai proxy automatically forwards your Coda OAuth — no token needed
+      // Fetch data from Coda via the local proxy server (no model in the loop)
       const courseData = await fetchCourseData(effDocId, primary, cleanName, addDebug);
 
       if (courseData.error) throw new Error(courseData.error);
@@ -795,16 +677,9 @@ export default function App() {
         <div className="glass-hdr">
           <WGUOwl/>
           <div>
-            <div className="hdr-title">CCW Document Exporter</div>
+            <div className="hdr-title">WGU Doc Exporter</div>
             <div className="hdr-sub">Design &amp; Development V3 · WGU</div>
           </div>
-          <span className="badge">CCW ready</span>
-        </div>
-
-        {/* Info banner */}
-        <div className="info-banner fade">
-          <InfoIcon/>
-          <span>Uses your connected <strong>Coda MCP</strong> — no API keys or tokens needed. Claude reads Coda directly and generates the Word document inside this artifact.</span>
         </div>
 
         {/* Coda connection */}
@@ -915,29 +790,41 @@ export default function App() {
             </div>
           )}
 
-          {/* Result */}
-          {phase==="done" && docxBytes && (
-            <div className="result-box fade">
-              <div className="res-title"><CheckIcon/> Document ready</div>
-              <div className="file-card">
-                <div className="file-icon"><DocIcon/></div>
-                <div className="file-info">
-                  <div className="fname">{filename}</div>
-                  <div className="fmeta">Word document · landscape · {docType}</div>
-                </div>
-                <button className={`save-btn${saved?" saved":""}`} onClick={doSave} disabled={saved}>
-                  {saved ? <>✓ Saved</> : <><DownloadIcon/> Save</>}
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Main action button — three states:
+                idle/ready  → "Export from CODA"         (triggers export)
+                running     → "Building your Doc"        (disabled)
+                done        → "Success! Please Save…"    (triggers save, light green)
+                saved       → "✓ Saved!"                 (disabled) */}
+          {(() => {
+            const mainClass =
+              "export-btn" +
+              (phase === "done" && !saved ? " success" : "") +
+              (saved ? " saved" : "");
 
-          {/* Export button */}
-          <button className="export-btn" onClick={doExport} disabled={!canExport}>
-            {phase==="running"
-              ? <><div className="spinner"/> Working…</>
-              : <><DownloadIcon/> Export &amp; download</>}
-          </button>
+            let onClick = doExport;
+            let disabled = !canExport;
+            let content;
+
+            if (phase === "running") {
+              content = <><BuildingIcon/> Building your Doc…</>;
+              disabled = true;
+            } else if (saved) {
+              content = <>✓ Saved!</>;
+              disabled = true;
+            } else if (phase === "done" && docxBytes) {
+              content = <><span style={{fontSize:"17px"}}>👍</span> Success! Please Save Your Doc</>;
+              onClick = doSave;
+              disabled = false;
+            } else {
+              content = <><ArrowUpIcon/> Export from CODA</>;
+            }
+
+            return (
+              <button className={mainClass} onClick={onClick} disabled={disabled}>
+                {content}
+              </button>
+            );
+          })()}
 
         </div>
 
@@ -950,3 +837,8 @@ export default function App() {
     </>
   );
 }
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+  </script>
+</body>
+</html>

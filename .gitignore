@@ -26,3 +26,7 @@ output/
 .idea/
 *.swp
 .DS_Store
+
+# Node / local dev server
+node_modules/
+.env
