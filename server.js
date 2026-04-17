@@ -703,16 +703,11 @@ app.get("/api/courses", async (req, res) => {
 // ref — CFL ref filtering is unreliable (RESUME trap #3). Alignment junctions
 // use the precomputed [Program Abbreviat(ed|ion)] plain-text column for
 // cheap server-side filtering (RESUME § Filter breakthrough).
-app.get("/api/pdow-data", async (req, res) => {
+// Core bundle builder — reused by both /api/pdow-data (returns JSON) and
+// /api/pdow-xlsx (POSTs the bundle to Modal and streams the xlsx back).
+async function buildPdowBundle(docId, programAbbr) {
   const t0 = Date.now();
-  try {
-    const docId = req.query.docId || "4YIajnJqvo";
-    const programAbbr = String(req.query.programAbbr || "").trim();
-    if (!programAbbr) {
-      return res.status(400).json({ error: "programAbbr is required" });
-    }
-
-    console.log(`\n[${new Date().toISOString()}] GET /api/pdow-data programAbbr=${programAbbr}`);
+  console.log(`\n[${new Date().toISOString()}] buildPdowBundle programAbbr=${programAbbr}`);
 
     // 1. Resolve program row ID (sequential — everything else needs it)
     const progResult = await mcpCallTool("table_rows_read", {
@@ -723,7 +718,9 @@ app.get("/api/pdow-data", async (req, res) => {
       asString((r.values || {})[PROGRAMS_ABBR]).trim() === programAbbr
     );
     if (!programRow) {
-      return res.status(404).json({ error: `Program not found: ${programAbbr}` });
+      const err = new Error(`Program not found: ${programAbbr}`);
+      err.status = 404;
+      throw err;
     }
     const programRowId = programRow.id || programRow.rowId;
     const programName  = asString(programRow.values[PROGRAMS_NAME_DISPLAY]).trim()
@@ -927,22 +924,82 @@ app.get("/api/pdow-data", async (req, res) => {
       })
       .filter(x => x.pcc_id && x.cct_id);
 
-    console.log(`  done ${Date.now() - t0}ms — ${courses.length} courses · ${program_outcomes.length} POs · ${ccts.length} CCTs · alignments ${course_po.length}/${course_cct.length}/${comp_po.length}/${comp_cct.length}`);
+  console.log(`  done ${Date.now() - t0}ms — ${courses.length} courses · ${program_outcomes.length} POs · ${ccts.length} CCTs · alignments ${course_po.length}/${course_cct.length}/${comp_po.length}/${comp_cct.length}`);
 
-    res.json({
-      program_code: programAbbr,
-      model: {
-        program: { id: programRowId, name: programName },
-        program_outcomes,
-        ccts,
-        courses,
-      },
-      alignments: { course_po, course_cct, comp_po, comp_cct },
-    });
+  return {
+    program_code: programAbbr,
+    model: {
+      program: { id: programRowId, name: programName },
+      program_outcomes,
+      ccts,
+      courses,
+    },
+    alignments: { course_po, course_cct, comp_po, comp_cct },
+  };
+}
+
+// JSON endpoint — returns the raw bundle. Used for diagnostics and as a
+// fallback when MODAL_BUILDER_URL isn't configured yet.
+app.get("/api/pdow-data", async (req, res) => {
+  try {
+    const docId = req.query.docId || "4YIajnJqvo";
+    const programAbbr = String(req.query.programAbbr || "").trim();
+    if (!programAbbr) {
+      return res.status(400).json({ error: "programAbbr is required" });
+    }
+    const bundle = await buildPdowBundle(docId, programAbbr);
+    res.json(bundle);
   } catch (err) {
     console.error(`  ERROR: ${err.message}`);
     console.error(err.stack);
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+// Xlsx endpoint — fetches the bundle from Coda, POSTs to the Modal builder,
+// and streams back the xlsx. MODAL_BUILDER_URL must be set in Render env
+// (see modal_builder/README.md for the deploy flow that produces it).
+app.get("/api/pdow-xlsx", async (req, res) => {
+  try {
+    const docId = req.query.docId || "4YIajnJqvo";
+    const programAbbr = String(req.query.programAbbr || "").trim();
+    if (!programAbbr) {
+      return res.status(400).json({ error: "programAbbr is required" });
+    }
+    const modalUrl = process.env.MODAL_BUILDER_URL;
+    if (!modalUrl) {
+      return res.status(500).json({
+        error: "MODAL_BUILDER_URL is not configured. Deploy modal_builder/ and set the env var (see modal_builder/README.md).",
+      });
+    }
+
+    const bundle = await buildPdowBundle(docId, programAbbr);
+
+    console.log(`  POSTing bundle to Modal builder…`);
+    const modalResp = await fetch(modalUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bundle),
+    });
+    if (!modalResp.ok) {
+      const errText = await modalResp.text().catch(() => "");
+      throw new Error(`Modal builder failed (HTTP ${modalResp.status}): ${errText.slice(0, 400)}`);
+    }
+
+    // Stream the xlsx back to the browser. Preserve Modal's
+    // Content-Disposition so the download lands with the program-coded name.
+    const contentDisp = modalResp.headers.get("content-disposition")
+      || `attachment; filename="${programAbbr}_Program_Map.xlsx"`;
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", contentDisp);
+
+    const xlsxBuf = Buffer.from(await modalResp.arrayBuffer());
+    console.log(`  xlsx streamed: ${xlsxBuf.length.toLocaleString()} bytes`);
+    res.send(xlsxBuf);
+  } catch (err) {
+    console.error(`  ERROR: ${err.message}`);
+    console.error(err.stack);
+    res.status(err.status || 500).json({ error: err.message });
   }
 });
 

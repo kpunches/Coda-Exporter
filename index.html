@@ -81,8 +81,8 @@ const STEPS_BY_TYPE = {
   ],
   PDOW: [
     { label: "Connecting to Coda"      },
-    { label: "Fetching program data"   },
-    { label: "Building kit zip"        },
+    { label: "Fetching & building xlsx" },
+    { label: "Finalizing"              },
     { label: "Ready"                   },
   ],
 };
@@ -121,42 +121,19 @@ async function fetchCourseData(docId, courseCode, courseName, onDebug) {
   return data;
 }
 
-// ─── PDOW: fetch the program data bundle from the proxy ─────────────────────
-// Returns the JSON the Python kit consumes — {program_code, model, alignments}.
-// The proxy does 9 Coda MCP calls in parallel per request; expect ~30-40s.
-async function fetchPdowData(programAbbr) {
-  const resp = await fetch(`${PROXY_URL}/api/pdow-data?programAbbr=${encodeURIComponent(programAbbr)}`);
-  const body = await resp.json().catch(() => null);
+// ─── PDOW: fetch the finished xlsx from the proxy ──────────────────────────
+// Render proxy fetches the Coda bundle, POSTs it to the Modal Python builder,
+// and streams the xlsx bytes back. End users never see the intermediate JSON
+// or the Python kit — they get a ready-to-open .xlsx.
+// Timing: ~30-40s (Coda fetches dominate) + ~2s (Modal build).
+async function fetchPdowXlsx(programAbbr) {
+  const resp = await fetch(`${PROXY_URL}/api/pdow-xlsx?programAbbr=${encodeURIComponent(programAbbr)}`);
   if (!resp.ok) {
-    const msg = body?.error || `HTTP ${resp.status}`;
-    throw new Error(msg);
+    // Error responses come back as JSON; success responses as binary xlsx.
+    const body = await resp.json().catch(() => null);
+    throw new Error(body?.error || `HTTP ${resp.status}`);
   }
-  return body;
-}
-
-// ─── PDOW: fetch the Python kit assets from GitHub Pages ────────────────────
-// Same origin as the deployed site, so no CORS. Text files come back as
-// strings; the xlsx template and owl.png come back as Uint8Arrays so
-// buildZip can store them byte-exactly. Keys become entry names in the zip.
-const KIT_TEXT_FILES   = ["run.py", "merger.py", "xlsx_writer.py", "README.md"];
-const KIT_BINARY_FILES = ["template_BSSCOM.xlsx", "owl.png"];
-
-async function fetchKitAssets() {
-  const assets = {};
-  const fetches = [
-    ...KIT_TEXT_FILES.map(async name => {
-      const resp = await fetch(`./pdow_kit/${name}`);
-      if (!resp.ok) throw new Error(`Kit asset fetch failed for ${name}: HTTP ${resp.status}`);
-      assets[name] = await resp.text();
-    }),
-    ...KIT_BINARY_FILES.map(async name => {
-      const resp = await fetch(`./pdow_kit/${name}`);
-      if (!resp.ok) throw new Error(`Kit asset fetch failed for ${name}: HTTP ${resp.status}`);
-      assets[name] = new Uint8Array(await resp.arrayBuffer());
-    }),
-  ];
-  await Promise.all(fetches);
-  return assets;
+  return new Uint8Array(await resp.arrayBuffer());
 }
 
 // ─── DOCX generation (pure in-memory XML + ZIP) ───────────────────────────────
@@ -765,25 +742,19 @@ function App() {
       await sleep(150);
 
       if (docType === "PDOW") {
-        // PDOW: fetch program bundle + kit assets, zip them in-browser, offer
-        // as download. Python kit runs locally on the user's machine — they
-        // never need Coda creds.
-        setStepIdx(1); // Fetching program data (Render endpoint: 30-40s)
-        const pdowData = await fetchPdowData(programAbbr);
+        // PDOW: single round-trip. Render proxy fetches the data bundle from
+        // Coda, POSTs it to the Modal builder (runs the pdow_kit Python),
+        // streams the xlsx back. Browser just receives the finished file.
+        setStepIdx(1); // Fetching program data (proxy call: 30-40s for Coda + ~2s for build)
+        const bytes = await fetchPdowXlsx(programAbbr);
 
-        setStepIdx(2); // Building kit zip
+        setStepIdx(2); // Building document (already built server-side; short pause for UI)
         await sleep(150);
-        const kitAssets = await fetchKitAssets();
-        const zipContents = {
-          ...kitAssets,
-          "data.json": JSON.stringify(pdowData, null, 2),
-        };
-        const bytes = buildZip(zipContents);
 
         setStepIdx(3); // Ready
         await sleep(200);
         setDocxBytes(bytes);
-        setFilename(`${programAbbr}_PDOW_Kit.zip`);
+        setFilename(`${programAbbr}_Program_Map.xlsx`);
         setPhase("done");
         return;
       }
@@ -815,10 +786,9 @@ function App() {
 
   function doSave() {
     if (!docxBytes || saved) return;
-    // Pick mime from the filename extension so .zip downloads stay a zip and
-    // don't get interpreted as a DOCX by the browser's save dialog.
-    const mime = filename.endsWith(".zip")
-      ? "application/zip"
+    // Pick mime from the filename extension — CCW emits DOCX, PDOW emits XLSX.
+    const mime = filename.endsWith(".xlsx")
+      ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     const blob = new Blob([docxBytes], {type: mime});
     const url  = URL.createObjectURL(blob);
