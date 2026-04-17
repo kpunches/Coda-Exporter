@@ -266,9 +266,12 @@ def _strip_stale_vml_comments(output_path: Path):
     import shutil
     import tempfile
     import re
+    import os
 
     src = output_path
-    tmp = Path(tempfile.mkstemp(suffix=".xlsx")[1])
+    _fd, _tmp_path = tempfile.mkstemp(suffix=".xlsx")
+    os.close(_fd)
+    tmp = Path(_tmp_path)
 
     def is_vml(path: str) -> bool:
         return bool(re.search(r"(vmlDrawing|commentsDrawing)\d*\.vml$", path))
