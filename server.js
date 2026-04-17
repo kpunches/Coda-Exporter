@@ -933,6 +933,34 @@ app.get("/api/pdow-data", async (req, res) => {
   }
 });
 
+// ─── Diagnostic: probe table_rows_read schema via intentional validation error
+// The Coda MCP schema isn't documented anywhere I can find, and the response
+// doesn't include a page token — yet hasMore=true on large tables means some
+// pagination mechanism must exist. Send obviously-invalid types for common
+// pagination param names and return the Zod error text (which previously told
+// us rowLimit maxes at 100). Hit /api/_probe once and the error text in the
+// response will reveal the accepted schema.
+app.get("/api/_probe", async (req, res) => {
+  const tests = [
+    { name: "offset_string",   args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1, offset: "not-a-number" } },
+    { name: "skip_string",     args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1, skip: "not-a-number" } },
+    { name: "page_string",     args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1, page: "not-a-number" } },
+    { name: "pageToken_bad",   args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1, pageToken: 12345 } },
+    { name: "bogus_param",     args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1, totallyMadeUp: "xyz" } },
+    { name: "rowLimit_1001",   args: { uri: `coda://docs/4YIajnJqvo/tables/${PROGRAMS_TABLE}`, rowLimit: 1001 } },
+  ];
+  const results = [];
+  for (const t of tests) {
+    try {
+      const r = await mcpCallTool("table_rows_read", t.args);
+      results.push({ test: t.name, ok: true, hasMore: r.hasMore, totalRows: r.totalRows, rowCount: (r.rows || []).length });
+    } catch (err) {
+      results.push({ test: t.name, ok: false, error: String(err.message).slice(0, 1200) });
+    }
+  }
+  res.json({ results });
+});
+
 // ─── Health ──────────────────────────────────────────────────────────────────
 
 app.get("/health", (_req, res) => {
