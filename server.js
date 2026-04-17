@@ -357,23 +357,22 @@ function poDescriptionFromSlate(raw) {
 
 // ─── Paginated read for tables that may exceed rowLimit (100) ─────────────────
 // Coda MCP caps rowLimit at 100 per call; many tables (prog_courses, PCC,
-// alignment junctions) regularly exceed that. Follows nextPageToken until the
-// table is fully consumed, with a safety cap to prevent runaway loops if the
-// token ever fails to clear.
+// alignment junctions) regularly exceed that. The MCP doesn't return a page
+// token — only `hasMore` + `totalRows` — so we paginate by passing `offset`
+// (skip-N-rows) on each subsequent call. 50-iteration safety cap to avoid
+// runaway loops if hasMore ever fails to flip.
 async function mcpReadAllRows(docId, tableGridId) {
   const uri = `coda://docs/${docId}/tables/${tableGridId}`;
   const allRows = [];
-  let pageToken = null;
   for (let page = 0; page < 50; page++) {
     const args = { uri, rowLimit: 100 };
-    if (pageToken) args.pageToken = pageToken;
+    if (allRows.length > 0) args.offset = allRows.length;
     const result = await mcpCallTool("table_rows_read", args);
     if (page === 0) {
-      console.log(`  [pagination] ${tableGridId} unfiltered: keys=${Object.keys(result).join(",")} rows=${(result.rows || []).length}`);
+      console.log(`  [pagination] ${tableGridId} unfiltered: total=${result.totalRows} hasMore=${result.hasMore} rows=${(result.rows || []).length}`);
     }
     allRows.push(...(result.rows || []));
-    pageToken = result.nextPageToken || result.pageToken || result.nextPageLink || null;
-    if (!pageToken) return allRows;
+    if (!result.hasMore) return allRows;
   }
   console.warn(`mcpReadAllRows: hit 50-page safety cap on ${tableGridId}; returning ${allRows.length} rows`);
   return allRows;
@@ -386,22 +385,18 @@ async function mcpReadAllRows(docId, tableGridId) {
 async function mcpReadAllFilteredRows(docId, tableGridId, filterFormula) {
   const uri = `coda://docs/${docId}/tables/${tableGridId}`;
   const allRows = [];
-  let pageToken = null;
   for (let page = 0; page < 50; page++) {
     const args = { uri, filterFormula, rowLimit: 100 };
-    if (pageToken) args.pageToken = pageToken;
+    if (allRows.length > 0) args.offset = allRows.length;
     const result = await mcpCallTool("table_rows_read", args);
     if (result.filterFormulaError) {
       throw new Error(`Coda filter rejected: ${result.filterFormulaError}. Filter: ${filterFormula}`);
     }
     if (page === 0) {
-      console.log(`  [pagination] ${tableGridId} filtered: keys=${Object.keys(result).join(",")} rows=${(result.rows || []).length}`);
+      console.log(`  [pagination] ${tableGridId} filtered: total=${result.totalRows} hasMore=${result.hasMore} rows=${(result.rows || []).length}`);
     }
     allRows.push(...(result.rows || []));
-    // MCP pagination field name isn't documented anywhere I can find — try the
-    // three common spellings. Whichever one lands wins.
-    pageToken = result.nextPageToken || result.pageToken || result.nextPageLink || null;
-    if (!pageToken) return allRows;
+    if (!result.hasMore) return allRows;
   }
   console.warn(`mcpReadAllFilteredRows: hit 50-page cap on ${tableGridId}`);
   return allRows;
