@@ -401,9 +401,11 @@ app.get("/api/programs", async (req, res) => {
 
     // No filterFormula — we want every program row. Calling mcpCallTool
     // directly since readFilteredTable assumes a filter is present.
+    // rowLimit cap is 100 on the Coda MCP. If WGU ever exceeds 100 programs,
+    // switch to paginated reads via pageToken.
     const result = await mcpCallTool("table_rows_read", {
       uri: `coda://docs/${docId}/tables/${PROGRAMS_TABLE}`,
-      rowLimit: 200,
+      rowLimit: 100,
     });
 
     const programs = (result.rows || [])
