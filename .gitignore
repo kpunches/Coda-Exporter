@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Output artifacts — these are generated, not source
+output/
+*.xlsx.bak
+~$*.xlsx
+
+# But DO track the template and checked-in model JSONs
+!pdow_exporter/template_BSSCOM.xlsx
+!pdow_exporter/data/live/*.json
+
+# Editor cruft
+.vscode/
+.idea/
+*.swp
+.DS_Store
