@@ -384,6 +384,40 @@ app.post("/api/course", async (req, res) => {
   }
 });
 
+// ─── Programs (PDOW) ─────────────────────────────────────────────────────────
+// Diagnostic endpoint — returns the full _Programs table so the frontend can
+// see what columns exist and identify which one holds the abbreviation
+// (MSCSIA, MSCIN, etc.). Once we lock the abbreviation column ID into the
+// PROGRAMS_TABLE schema below, this endpoint can be slimmed to {id, name, abbr}.
+
+const PROGRAMS_TABLE = "grid-_cLrawcUzd";
+
+app.get("/api/programs", async (req, res) => {
+  const t0 = Date.now();
+  try {
+    const docId = req.query.docId || "4YIajnJqvo";
+    console.log(`\n[${new Date().toISOString()}] GET /api/programs docId=${docId}`);
+
+    // No filterFormula — we want every program row. Calling mcpCallTool
+    // directly since readFilteredTable assumes a filter is present.
+    const result = await mcpCallTool("table_rows_read", {
+      uri: `coda://docs/${docId}/tables/${PROGRAMS_TABLE}`,
+      rowLimit: 200,
+    });
+
+    const rows = (result.rows || []).map(r => ({
+      rowId: r.id || r.rowId,
+      values: r.values || {},
+    }));
+
+    console.log(`  done ${Date.now() - t0}ms — ${rows.length} programs`);
+    res.json({ rows });
+  } catch (err) {
+    console.error(`  ERROR: ${err.message}`);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Health ──────────────────────────────────────────────────────────────────
 
 app.get("/health", (_req, res) => {
