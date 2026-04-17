@@ -37,6 +37,15 @@ const COMP_TABLE     = "grid-VZwiNNkP1B";
 const CCT_TABLE      = "grid-bdbEJT9Kuq";   // _PC | _CCTs
 const PO_TABLE       = "grid-tUkDsBwjVg";   // _Progs | _Courses to _Program Outcomes
 
+// Additional tables used by PDOW (Program Map) export
+const PROGRAM_OUTCOMES_TABLE = "grid-aFulSXgnJe"; // _Progs Outcomes
+const CCTS_TABLE             = "grid-8Azxi66Mj-"; // _CCTs (base)
+const PCC_TABLE              = "grid-TmGA_WNe3_"; // _Progs_Courses | _Comps
+const COURSE_X_PO_TABLE      = "grid-tUkDsBwjVg"; // course × PO junction (same as PO_TABLE)
+const COURSE_X_CCT_TABLE     = "grid-bdbEJT9Kuq"; // course × CCT junction (same as CCT_TABLE)
+const COMP_X_PO_TABLE        = "grid-NkK5JDeDhF"; // competency × PO junction
+const COMP_X_CCT_TABLE       = "grid-6xLuZLsQ_t"; // competency × CCT junction
+
 // Course-level column IDs
 const CC = {
   courseCode:    "c-sgyJdn2bVc",
@@ -55,10 +64,20 @@ const CC = {
 
 // Program–Course pairing row column IDs (PC_TABLE)
 const PC = {
-  programRef: "c-UaE_k1Ivfh",      // ref → programs
-  courseRef:  "c-aGpuFk4ifn",      // ref → courses (base)
-  cctRowIds:  "c-6ucKx1qPTM",      // refs to CCT_TABLE (only aligned ones)
-  poRowIds:   "c-jkdSmFgPaR",      // refs to PO_TABLE
+  programRef:  "c-UaE_k1Ivfh",     // ref → programs
+  courseRef:   "c-aGpuFk4ifn",     // ref → courses (base)
+  cctRowIds:   "c-6ucKx1qPTM",     // refs to CCT_TABLE (only aligned ones) — CCW path
+  poRowIds:    "c-jkdSmFgPaR",     // refs to PO_TABLE — CCW path
+  // PDOW metadata — course-level attributes surfaced in the Program Map xlsx
+  stdPath:     "c-tJdYNtbcRy",     // number
+  term:        "c-j0Y6lwi_yU",     // text
+  cu:          "c-DTsXuT3z72",     // number
+  scope:       "c-UlpI6zHbtU",     // ref → select (New/Existing/Redesign)
+  ownership:   "c-SSH1vm1eG5",     // ref → schools
+  designation: "c-YZLH4IcD51",     // text (Core / Major / GE-…)
+  certificate: "c-sj2stjNrbN",     // text (usually blank)
+  scopeNotes:  "c-nHeKFgF3C5",     // slate — course-level scope notes
+  description: "c-PoBDbaSL6S",     // plain text — course description (Existing)
 };
 
 // Competency-level column IDs
@@ -80,6 +99,48 @@ const TCT = {
   aligned:     "c-bBVinldWlI",   // arr of ref → .value[0].name (e.g. "M", "A", "R")
   description: "c-6nEfa4CN4i",   // plain text (CCT only)
 };
+
+// _Progs Outcomes (program-outcomes base) columns
+const PO_COLS = {
+  nameSlate: "c-h3bw7zZXzf",     // slate: "Program Outcome: <name>\n<description>"
+  programRef: "c-joP6IMYsmR",    // ref → programs
+};
+
+// _CCTs (base) columns
+const CCT_COLS = {
+  name:        "c-eJu3miLkC_",   // plain text
+  description: "c-n4q71ORRVT",   // plain text
+  programRef:  "c-joP6IMYsmR",   // ref → programs (same col ID as PO_COLS.programRef by coincidence)
+};
+
+// _Progs_Courses | _Comps (PCC) columns — competency-level metadata
+const PCC_COLS = {
+  programRef:    "c-a4-JBknQCD", // ref → programs
+  courseBaseRef: "c-UfDWlbwQXC", // ref → courses (base)
+  progCourseRef: "c-WLMD7Ir-os", // ref → prog_courses (junction)
+  title:         "c-XRPTQDN2ZN", // plain text
+  statement:     "c-ZQ354aYNfj", // plain text
+  level:         "c-FZuaohTac9", // number
+  assessment:    "c-GunVQKG_Ir", // ref → assessments (name = "PA" / "OA" / etc.)
+};
+
+// Course × PO and Course × CCT junction columns (shared schema)
+const CXA_COLS = {
+  progCourseRef: "c-Dn7elyFRLj", // ref → prog_courses
+  target:        "c-4CuABuCpCx", // ref → PO or CCT
+  aligned:       "c-bBVinldWlI", // arr of refs to IRMA letters
+};
+
+// Competency × PO and Competency × CCT junction columns (shared schema)
+const CMX_COLS = {
+  pccRef:  "c-pvQqegHRGa",       // ref → PCC
+  target:  "c-K0OcZXEwDe",       // ref → PO or CCT
+  aligned: "c-BKtOyobxvu",       // arr of refs to IRMA letters
+};
+
+// _Programs columns
+const PROGRAMS_NAME_TEXT    = "c-JbFOWBC9i0"; // plain-text program name
+const PROGRAMS_NAME_DISPLAY = "c-L3c8jGheXt"; // "B.S. ..." / "M.S. ..." display form
 
 // ─── Value extractors (MCP wraps values in { content: ... }) ─────────────────
 
@@ -233,6 +294,67 @@ async function mcpCallTool(toolName, args) {
   }
 }
 
+// Multi-ref array → list of identifier strings. Used to iterate over refs that
+// point at many rows (e.g. an "Aligned" field whose value is [I, R, M]).
+function asRefIdArray(raw) {
+  const v = unwrap(raw);
+  if (!v) return [];
+  if (typeof v === "object" && v.type === "arr" && Array.isArray(v.value)) {
+    return v.value.map(r => r.identifier || r.id || "").filter(Boolean);
+  }
+  if (Array.isArray(v)) return v.map(r => (typeof r === "object" ? r.identifier || r.id || "" : String(r))).filter(Boolean);
+  return [];
+}
+
+// Multi-ref array → list of ref .name strings. Used for IRMA letter arrays
+// (each ref's .name is "I" / "R" / "M" / "A" / "X").
+function asRefNames(raw) {
+  const v = unwrap(raw);
+  if (!v) return [];
+  if (typeof v === "object" && v.type === "arr" && Array.isArray(v.value)) {
+    return v.value.map(r => String(r.name || "").trim()).filter(Boolean);
+  }
+  if (Array.isArray(v)) return v.map(r => (typeof r === "object" ? String(r.name || "").trim() : String(r))).filter(Boolean);
+  return [];
+}
+
+// Slate shape → plain text (whole body, line-joined). Used for scope notes and
+// any other rich-text column we want to store as plain text for the xlsx.
+function asSlateText(raw) {
+  const v = unwrap(raw);
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "object" && v.root && Array.isArray(v.root.children)) {
+    return v.root.children
+      .map(line => (line.children || []).map(c => c.text || "").join(""))
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+  }
+  return "";
+}
+
+// PO slate parser — matches pdow_exporter/coda_schema.extract_po_name_from_slate.
+// The PO name lives on the first line, prefixed with "Program Outcome: "; the
+// description is everything after that.
+function poNameFromSlate(raw) {
+  const v = unwrap(raw);
+  if (!v || typeof v !== "object" || !v.root) return "";
+  const first = (v.root.children || [])[0] || {};
+  const text  = (first.children || []).map(c => c.text || "").join("");
+  return text.replace(/^Program Outcome:\s*/, "").trim();
+}
+
+function poDescriptionFromSlate(raw) {
+  const v = unwrap(raw);
+  if (!v || typeof v !== "object" || !v.root) return "";
+  const lines = v.root.children || [];
+  return lines.slice(1)
+    .map(line => (line.children || []).map(c => c.text || "").join(""))
+    .join("\n")
+    .trim();
+}
+
 // ─── Paginated read for tables that may exceed rowLimit (100) ─────────────────
 // Coda MCP caps rowLimit at 100 per call; many tables (prog_courses, PCC,
 // alignment junctions) regularly exceed that. Follows nextPageToken until the
@@ -251,6 +373,29 @@ async function mcpReadAllRows(docId, tableGridId) {
     if (!pageToken) return allRows;
   }
   console.warn(`mcpReadAllRows: hit 50-page safety cap on ${tableGridId}; returning ${allRows.length} rows`);
+  return allRows;
+}
+
+// Same as mcpReadAllRows but adds a filterFormula and surfaces filterFormulaError
+// (trap #1) before the rows are returned. Used for the four PDOW alignment
+// junctions — each has a precomputed [Program Abbreviated] / [Program
+// Abbreviation] column that makes this cheap.
+async function mcpReadAllFilteredRows(docId, tableGridId, filterFormula) {
+  const uri = `coda://docs/${docId}/tables/${tableGridId}`;
+  const allRows = [];
+  let pageToken = null;
+  for (let page = 0; page < 50; page++) {
+    const args = { uri, filterFormula, rowLimit: 100 };
+    if (pageToken) args.pageToken = pageToken;
+    const result = await mcpCallTool("table_rows_read", args);
+    if (result.filterFormulaError) {
+      throw new Error(`Coda filter rejected: ${result.filterFormulaError}. Filter: ${filterFormula}`);
+    }
+    allRows.push(...(result.rows || []));
+    pageToken = result.nextPageToken || null;
+    if (!pageToken) return allRows;
+  }
+  console.warn(`mcpReadAllFilteredRows: hit 50-page cap on ${tableGridId}`);
   return allRows;
 }
 
@@ -552,6 +697,235 @@ app.get("/api/courses", async (req, res) => {
     res.json({ courses });
   } catch (err) {
     console.error(`  ERROR: ${err.message}`);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── PDOW Program Map data bundle ────────────────────────────────────────────
+// Builds the data.json shape consumed by pdow_kit/merger.py: the base model
+// (program, POs, CCTs, courses with competencies) plus the 4 raw alignment
+// arrays. Frontend zips this with the kit assets for local xlsx build.
+//
+// Fetches in parallel where possible (9 total):
+//   programs, prog_courses, courses base, PCC, POs, CCTs, 4 alignment junctions
+// Base tables (PO, CCT, PCC, prog_courses) are filtered client-side by program
+// ref — CFL ref filtering is unreliable (RESUME trap #3). Alignment junctions
+// use the precomputed [Program Abbreviat(ed|ion)] plain-text column for
+// cheap server-side filtering (RESUME § Filter breakthrough).
+app.get("/api/pdow-data", async (req, res) => {
+  const t0 = Date.now();
+  try {
+    const docId = req.query.docId || "4YIajnJqvo";
+    const programAbbr = String(req.query.programAbbr || "").trim();
+    if (!programAbbr) {
+      return res.status(400).json({ error: "programAbbr is required" });
+    }
+
+    console.log(`\n[${new Date().toISOString()}] GET /api/pdow-data programAbbr=${programAbbr}`);
+
+    // 1. Resolve program row ID (sequential — everything else needs it)
+    const progResult = await mcpCallTool("table_rows_read", {
+      uri: `coda://docs/${docId}/tables/${PROGRAMS_TABLE}`,
+      rowLimit: 100,
+    });
+    const programRow = (progResult.rows || []).find(r =>
+      asString((r.values || {})[PROGRAMS_ABBR]).trim() === programAbbr
+    );
+    if (!programRow) {
+      return res.status(404).json({ error: `Program not found: ${programAbbr}` });
+    }
+    const programRowId = programRow.id || programRow.rowId;
+    const programName  = asString(programRow.values[PROGRAMS_NAME_DISPLAY]).trim()
+                      || asString(programRow.values[PROGRAMS_NAME_TEXT]).trim();
+    console.log(`  program ${programAbbr} → ${programRowId}`);
+
+    // 2. Parallel fetches (8 reads, all paginated where needed)
+    const junctionFilter1 = `[Program Abbreviated] = "${cflEscape(programAbbr)}"`;  // course-level
+    const junctionFilter2 = `[Program Abbreviation] = "${cflEscape(programAbbr)}"`; // comp-level
+
+    const [
+      pcRows, baseCourseRows, pccRows, poBaseRows, cctBaseRows,
+      coursePoRows, courseCctRows, compPoRows, compCctRows,
+    ] = await Promise.all([
+      mcpReadAllRows(docId, PC_TABLE),
+      mcpReadAllRows(docId, COURSE_TABLE),
+      mcpReadAllRows(docId, PCC_TABLE),
+      mcpReadAllRows(docId, PROGRAM_OUTCOMES_TABLE),
+      mcpReadAllRows(docId, CCTS_TABLE),
+      mcpReadAllFilteredRows(docId, COURSE_X_PO_TABLE,  junctionFilter1),
+      mcpReadAllFilteredRows(docId, COURSE_X_CCT_TABLE, junctionFilter1),
+      mcpReadAllFilteredRows(docId, COMP_X_PO_TABLE,    junctionFilter2),
+      mcpReadAllFilteredRows(docId, COMP_X_CCT_TABLE,   junctionFilter2),
+    ]);
+
+    console.log(`  fetched: ${pcRows.length} PC · ${baseCourseRows.length} courses · ${pccRows.length} PCC · ${poBaseRows.length} POs · ${cctBaseRows.length} CCTs`);
+    console.log(`  junctions: ${coursePoRows.length}/${courseCctRows.length}/${compPoRows.length}/${compCctRows.length} (c×po/c×cct/p×po/p×cct)`);
+
+    // 3. Program outcomes for this program (client-side filter on program ref)
+    const program_outcomes = poBaseRows
+      .filter(r => extractRefId((r.values || {})[PO_COLS.programRef]) === programRowId)
+      .map(r => ({
+        id: r.id || r.rowId,
+        name: poNameFromSlate((r.values || {})[PO_COLS.nameSlate]),
+        description: poDescriptionFromSlate((r.values || {})[PO_COLS.nameSlate]),
+      }));
+
+    // 4. CCTs for this program
+    const ccts = cctBaseRows
+      .filter(r => extractRefId((r.values || {})[CCT_COLS.programRef]) === programRowId)
+      .map(r => ({
+        id:   r.id || r.rowId,
+        name: asString((r.values || {})[CCT_COLS.name]).trim(),
+        description: asString((r.values || {})[CCT_COLS.description]).trim(),
+      }))
+      .filter(c => c.name);
+
+    // 5. Courses — filter prog_courses by program ref, join to base table
+    const baseByRowId = {};
+    for (const r of baseCourseRows) {
+      baseByRowId[r.id || r.rowId] = {
+        code: asString((r.values || {})[CC.courseCode]).trim(),
+        name: asString((r.values || {})[CC.courseName]).trim(),
+        cu:   asNumber((r.values || {})[CC.creditUnits]),
+      };
+    }
+
+    const matchedPc = pcRows.filter(r =>
+      extractRefId((r.values || {})[PC.programRef]) === programRowId
+    );
+
+    const coursesByPcId = {};
+    const courses = matchedPc.map(r => {
+      const v = r.values || {};
+      const courseBaseId = extractRefId(v[PC.courseRef]);
+      const base = baseByRowId[courseBaseId] || {};
+      const termText = asString(v[PC.term]);
+      const c = {
+        prog_course_id:  r.id || r.rowId,
+        course_base_id:  courseBaseId,
+        code:            base.code || "",
+        name:            base.name || "",
+        display_name:    (() => {
+          const raw = unwrap(v[PC.courseRef]);
+          return (raw && typeof raw === "object" && raw.name) ? String(raw.name) : "";
+        })(),
+        term:            termText,
+        std_path_order:  asNumber(v[PC.stdPath]) || null,
+        cu:              asNumber(v[PC.cu]) || base.cu || null,
+        scope:           asName(v[PC.scope]),
+        ownership:       asName(v[PC.ownership]),
+        designation:     asString(v[PC.designation]),
+        certificate:     asString(v[PC.certificate]),
+        scope_notes:     asSlateText(v[PC.scopeNotes]),
+        description:     asString(v[PC.description]),
+        po_alignments:   {},
+        cct_alignments:  {},
+        competencies:    [],
+      };
+      coursesByPcId[c.prog_course_id] = c;
+      return c;
+    });
+
+    // Stable sort per extractor.py: (term_int, std_path_order, code)
+    courses.sort((a, b) => {
+      const ta = /^\d+$/.test(a.term) ? parseInt(a.term, 10) : 99;
+      const tb = /^\d+$/.test(b.term) ? parseInt(b.term, 10) : 99;
+      if (ta !== tb) return ta - tb;
+      const sa = a.std_path_order ?? 9999;
+      const sb = b.std_path_order ?? 9999;
+      if (sa !== sb) return sa - sb;
+      return (a.code || "zzz").localeCompare(b.code || "zzz");
+    });
+
+    // 6. Competencies — filter PCC by program ref, attach to courses
+    for (const r of pccRows) {
+      const v = r.values || {};
+      if (extractRefId(v[PCC_COLS.programRef]) !== programRowId) continue;
+      let progCourseId = extractRefId(v[PCC_COLS.progCourseRef]);
+      if (!progCourseId) {
+        // Fallback: resolve via course base ref → matching prog_course for this program
+        const courseBaseId = extractRefId(v[PCC_COLS.courseBaseRef]);
+        const host = courses.find(c => c.course_base_id === courseBaseId);
+        if (host) progCourseId = host.prog_course_id;
+      }
+      const comp = {
+        pcc_id:         r.id || r.rowId,
+        prog_course_id: progCourseId || null,
+        title:          asString(v[PCC_COLS.title]),
+        statement:      asString(v[PCC_COLS.statement]),
+        level:          asNumber(v[PCC_COLS.level]) || null,
+        assessment:     asName(v[PCC_COLS.assessment]),
+        po_alignments:  {},
+        cct_alignments: {},
+      };
+      const host = coursesByPcId[progCourseId];
+      if (host) host.competencies.push(comp);
+    }
+
+    // 7. Raw alignment arrays — merger fills them into the model at build time
+    const course_po = coursePoRows
+      .map(r => ({
+        prog_course_id: extractRefId((r.values || {})[CXA_COLS.progCourseRef]),
+        po_id:          extractRefId((r.values || {})[CXA_COLS.target]),
+        letters:        asRefNames((r.values || {})[CXA_COLS.aligned]),
+      }))
+      .filter(x => x.prog_course_id && x.po_id);
+
+    const course_cct = courseCctRows
+      .map(r => ({
+        prog_course_id: extractRefId((r.values || {})[CXA_COLS.progCourseRef]),
+        cct_id:         extractRefId((r.values || {})[CXA_COLS.target]),
+        letters:        asRefNames((r.values || {})[CXA_COLS.aligned]),
+      }))
+      .filter(x => x.prog_course_id && x.cct_id);
+
+    // For competency-level rows we also need course_base_id since the merger
+    // keys on (course_base_id, pcc_id). Derive it from the PCC lookup.
+    const pccToCourseBase = {};
+    for (const r of pccRows) {
+      const pccId = r.id || r.rowId;
+      pccToCourseBase[pccId] = extractRefId((r.values || {})[PCC_COLS.courseBaseRef]);
+    }
+
+    const comp_po = compPoRows
+      .map(r => {
+        const pcc = extractRefId((r.values || {})[CMX_COLS.pccRef]);
+        return {
+          pcc_id:         pcc,
+          course_base_id: pccToCourseBase[pcc] || null,
+          po_id:          extractRefId((r.values || {})[CMX_COLS.target]),
+          letters:        asRefNames((r.values || {})[CMX_COLS.aligned]),
+        };
+      })
+      .filter(x => x.pcc_id && x.po_id);
+
+    const comp_cct = compCctRows
+      .map(r => {
+        const pcc = extractRefId((r.values || {})[CMX_COLS.pccRef]);
+        return {
+          pcc_id:         pcc,
+          course_base_id: pccToCourseBase[pcc] || null,
+          cct_id:         extractRefId((r.values || {})[CMX_COLS.target]),
+          letters:        asRefNames((r.values || {})[CMX_COLS.aligned]),
+        };
+      })
+      .filter(x => x.pcc_id && x.cct_id);
+
+    console.log(`  done ${Date.now() - t0}ms — ${courses.length} courses · ${program_outcomes.length} POs · ${ccts.length} CCTs · alignments ${course_po.length}/${course_cct.length}/${comp_po.length}/${comp_cct.length}`);
+
+    res.json({
+      program_code: programAbbr,
+      model: {
+        program: { id: programRowId, name: programName },
+        program_outcomes,
+        ccts,
+        courses,
+      },
+      alignments: { course_po, course_cct, comp_po, comp_cct },
+    });
+  } catch (err) {
+    console.error(`  ERROR: ${err.message}`);
+    console.error(err.stack);
     res.status(500).json({ error: err.message });
   }
 });
