@@ -70,12 +70,23 @@ const DOC_TYPES = [
   { id: "SOON", name: "SSD / CSBD", full: "exports coming soon!",  available: false },
 ];
 
-const STEPS = [
-  { label: "Connecting to Coda" },
-  { label: "Looking up course"  },
-  { label: "Building document"  },
-  { label: "Ready"              },
-];
+// Step labels by doc type. Both paths share the same 4-stage shape so the
+// progress bar geometry stays constant; labels change per flow.
+const STEPS_BY_TYPE = {
+  CCW: [
+    { label: "Connecting to Coda" },
+    { label: "Looking up course"  },
+    { label: "Building document"  },
+    { label: "Ready"              },
+  ],
+  PDOW: [
+    { label: "Connecting to Coda"      },
+    { label: "Fetching program data"   },
+    { label: "Building kit zip"        },
+    { label: "Ready"                   },
+  ],
+};
+const DEFAULT_STEPS = STEPS_BY_TYPE.CCW;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -108,6 +119,44 @@ async function fetchCourseData(docId, courseCode, courseName, onDebug) {
   onDebug(`Got: ${data.courseCode} — ${data.courseName}. ${(data.competencies || []).length} competencies. Building document…`);
 
   return data;
+}
+
+// ─── PDOW: fetch the program data bundle from the proxy ─────────────────────
+// Returns the JSON the Python kit consumes — {program_code, model, alignments}.
+// The proxy does 9 Coda MCP calls in parallel per request; expect ~30-40s.
+async function fetchPdowData(programAbbr) {
+  const resp = await fetch(`${PROXY_URL}/api/pdow-data?programAbbr=${encodeURIComponent(programAbbr)}`);
+  const body = await resp.json().catch(() => null);
+  if (!resp.ok) {
+    const msg = body?.error || `HTTP ${resp.status}`;
+    throw new Error(msg);
+  }
+  return body;
+}
+
+// ─── PDOW: fetch the Python kit assets from GitHub Pages ────────────────────
+// Same origin as the deployed site, so no CORS. Text files come back as
+// strings; the xlsx template and owl.png come back as Uint8Arrays so
+// buildZip can store them byte-exactly. Keys become entry names in the zip.
+const KIT_TEXT_FILES   = ["run.py", "merger.py", "xlsx_writer.py", "README.md"];
+const KIT_BINARY_FILES = ["template_BSSCOM.xlsx", "owl.png"];
+
+async function fetchKitAssets() {
+  const assets = {};
+  const fetches = [
+    ...KIT_TEXT_FILES.map(async name => {
+      const resp = await fetch(`./pdow_kit/${name}`);
+      if (!resp.ok) throw new Error(`Kit asset fetch failed for ${name}: HTTP ${resp.status}`);
+      assets[name] = await resp.text();
+    }),
+    ...KIT_BINARY_FILES.map(async name => {
+      const resp = await fetch(`./pdow_kit/${name}`);
+      if (!resp.ok) throw new Error(`Kit asset fetch failed for ${name}: HTTP ${resp.status}`);
+      assets[name] = new Uint8Array(await resp.arrayBuffer());
+    }),
+  ];
+  await Promise.all(fetches);
+  return assets;
 }
 
 // ─── DOCX generation (pure in-memory XML + ZIP) ───────────────────────────────
@@ -442,7 +491,10 @@ function buildZip(files) {
   const entries=[];
   let offset=0;
   for(const [name,content] of Object.entries(files)){
-    const nb=enc.encode(name),db=enc.encode(content);
+    const nb=enc.encode(name);
+    // String content → UTF-8 encode; Uint8Array (binary assets) → pass through
+    // as-is so template xlsx / owl.png aren't mangled by TextEncoder.
+    const db=content instanceof Uint8Array ? content : enc.encode(content);
     const crc=crc32(db),now=dosDateTime();
     entries.push({nb,db,crc,size:db.length,offset,...now});
     offset+=30+nb.length+db.length;
@@ -687,6 +739,7 @@ function App() {
   // code-sorted primary dropdown.
   const coursesByName = [...courses].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
+  const STEPS = STEPS_BY_TYPE[docType] || DEFAULT_STEPS;
   const pct = stepIdx < 0 ? 0 : Math.round((stepIdx / (STEPS.length - 1)) * 100);
 
   function clearStatus() {
@@ -708,16 +761,34 @@ function App() {
     setPhase("running");
 
     try {
-      // PDOW path: reserved for the next commit. Surfacing a clear error
-      // here is intentional — the dropdown wiring + validation should still
-      // be testable in the deployed UI even before data fetching lands.
-      if (docType === "PDOW") {
-        throw new Error("PDOW export isn't wired up yet — landing in the next deploy.");
-      }
-
       setStepIdx(0); // Connecting to Coda
       await sleep(150);
 
+      if (docType === "PDOW") {
+        // PDOW: fetch program bundle + kit assets, zip them in-browser, offer
+        // as download. Python kit runs locally on the user's machine — they
+        // never need Coda creds.
+        setStepIdx(1); // Fetching program data (Render endpoint: 30-40s)
+        const pdowData = await fetchPdowData(programAbbr);
+
+        setStepIdx(2); // Building kit zip
+        await sleep(150);
+        const kitAssets = await fetchKitAssets();
+        const zipContents = {
+          ...kitAssets,
+          "data.json": JSON.stringify(pdowData, null, 2),
+        };
+        const bytes = buildZip(zipContents);
+
+        setStepIdx(3); // Ready
+        await sleep(200);
+        setDocxBytes(bytes);
+        setFilename(`${programAbbr}_PDOW_Kit.zip`);
+        setPhase("done");
+        return;
+      }
+
+      // CCW path
       setStepIdx(1); // Looking up course (held throughout the proxy POST)
       const courseData = await fetchCourseData(effDocId, primary, cleanName, addDebug);
 
@@ -740,11 +811,16 @@ function App() {
       setErrMsg(err.message || "Unexpected error. Please try again.");
       setPhase("error");
     }
-  }, [canExport, effDocId, primary, cleanName, docType]);
+  }, [canExport, effDocId, primary, cleanName, docType, programAbbr]);
 
   function doSave() {
     if (!docxBytes || saved) return;
-    const blob = new Blob([docxBytes], {type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+    // Pick mime from the filename extension so .zip downloads stay a zip and
+    // don't get interpreted as a DOCX by the browser's save dialog.
+    const mime = filename.endsWith(".zip")
+      ? "application/zip"
+      : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const blob = new Blob([docxBytes], {type: mime});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a");
     a.href=url; a.download=filename;
