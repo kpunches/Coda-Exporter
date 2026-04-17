@@ -372,7 +372,7 @@ async function mcpReadAllRows(docId, tableGridId, baseFilter = null) {
   for (let page = 0; page < 50; page++) {
     const clauses = [];
     if (baseFilter)  clauses.push(`(${baseFilter})`);
-    if (lastMaxId)   clauses.push(`RowId() > "${lastMaxId}"`);
+    if (lastMaxId)   clauses.push(`thisRow.RowId() > "${lastMaxId}"`);
     const args = { uri, rowLimit: 100 };
     if (clauses.length) args.filterFormula = clauses.join(" AND ");
     const result = await mcpCallTool("table_rows_read", args);
