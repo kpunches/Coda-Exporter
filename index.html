@@ -73,12 +73,9 @@ const DOC_TYPES = [
 const STEPS = [
   { label: "Connecting to Coda" },
   { label: "Looking up course"  },
-  { label: "Fetching data"      },
   { label: "Building document"  },
   { label: "Ready"              },
 ];
-
-const STEP_MS = [1200, 2500, 4000, 3000];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -581,7 +578,6 @@ function App() {
   const [saved,      setSaved]      = useState(false);
   const [debugLog,   setDebugLog]   = useState([]);
   const [showDebug,  setShowDebug]  = useState(false);
-  const timerRef = useRef(null);
 
   const effDocId  = docId.trim() || "4YIajnJqvo";
   const cleanCode = code.trim().toUpperCase();
@@ -600,52 +596,43 @@ function App() {
     setPhase("idle"); setStepIdx(-1); setErrMsg("");
     setDocxBytes(null); setFilename(""); setSaved(false);
     setDebugLog([]);
-    if (timerRef.current) clearInterval(timerRef.current);
   }
 
   function addDebug(msg) {
     setDebugLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
   }
 
-  function startStepTimer() {
-    let idx = 0;
-    setStepIdx(0);
-    timerRef.current = setInterval(() => {
-      idx++;
-      if (idx < STEPS.length - 1) setStepIdx(idx);
-      else clearInterval(timerRef.current);
-    }, STEP_MS[idx] || 3000);
-  }
-
+  // Drives stepIdx from real progress events — never auto-advances on a timer.
+  // On error, deliberately leaves stepIdx where it was so the failed step stays
+  // lit in the (briefly visible) progress card and the err-box explains why.
   const doExport = useCallback(async () => {
     if (!canExport) return;
     clearStatus();
     setPhase("running");
-    startStepTimer();
 
     try {
-      // Fetch data from Coda via the local proxy server (no model in the loop)
+      setStepIdx(0); // Connecting to Coda
+      await sleep(150);
+
+      setStepIdx(1); // Looking up course (held throughout the proxy POST)
       const courseData = await fetchCourseData(effDocId, primary, cleanName, addDebug);
 
       if (courseData.error) throw new Error(courseData.error);
 
-      if (timerRef.current) clearInterval(timerRef.current);
-      setStepIdx(3); // Building document
-      await sleep(600);
+      setStepIdx(2); // Building document
+      await sleep(150);
 
-      // Step 4: build docx entirely in the artifact
       const bytes = makeDocx(courseData);
       const outName = (courseData.courseCode || primary || "COURSE").trim().replace(/\s+/g,"") + "_" + docType + ".docx";
 
-      setStepIdx(4); // Ready
-      await sleep(300);
+      setStepIdx(3); // Ready
+      await sleep(200);
 
       setDocxBytes(bytes);
       setFilename(outName);
       setPhase("done");
 
     } catch(err) {
-      if (timerRef.current) clearInterval(timerRef.current);
       setErrMsg(err.message || "Unexpected error. Please try again.");
       setPhase("error");
     }
