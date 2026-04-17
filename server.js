@@ -961,23 +961,27 @@ app.get("/api/pdow-data", async (req, res) => {
 // us rowLimit maxes at 100). Hit /api/_probe once and the error text in the
 // response will reveal the accepted schema.
 app.get("/api/_probe", async (req, res) => {
-  // Probe filter syntax for filtering a ref column by the target row ID.
-  // Anchor: comp_x_po table for MSCSIA, trying to narrow from 200 rows down
-  // to just the rows whose Program Outcome is "i-4MSH5Bo8aN" (Cybersecurity
-  // Strategy, the first MSCSIA PO). A correct filter should return ~40 rows.
   const uri = `coda://docs/4YIajnJqvo/tables/${COMP_X_PO_TABLE}`;
   const absAbbr = `[Program Abbreviation] = "MSCSIA"`;
-  const poId = "i-4MSH5Bo8aN";
   const poName = "Cybersecurity Strategy and Risk Management";
+
+  // First, grab one real row so we can see exactly what each column contains.
+  let sampleRow = null;
+  try {
+    const r = await mcpCallTool("table_rows_read", { uri, rowLimit: 1, filterFormula: absAbbr });
+    sampleRow = (r.rows || [])[0] || null;
+  } catch (err) {
+    sampleRow = { error: String(err.message).slice(0, 400) };
+  }
+
   const tests = [
     { name: "baseline_abbr_only",        filter: absAbbr },
-    { name: "RowId_col",                 filter: `${absAbbr} AND RowId([Program Outcome]) = "${poId}"` },
-    { name: "col_RowId_method",          filter: `${absAbbr} AND [Program Outcome].RowId() = "${poId}"` },
-    { name: "col_eq_id_string",          filter: `${absAbbr} AND [Program Outcome] = "${poId}"` },
-    { name: "col_Name_eq",               filter: `${absAbbr} AND [Program Outcome].Name = "${poName}"` },
-    { name: "col_Name_contains",         filter: `${absAbbr} AND [Program Outcome].Name.Contains("Cybersecurity Strategy")` },
-    { name: "col_ToText_contains",       filter: `${absAbbr} AND [Program Outcome].ToText().Contains("${poId}")` },
-    { name: "col_contains_id",           filter: `${absAbbr} AND [Program Outcome].Contains("${poId}")` },
+    { name: "po_contains_name_fragment", filter: `${absAbbr} AND [Program Outcome].Contains("Cybersecurity Strategy")` },
+    { name: "po_eq_full_name",           filter: `${absAbbr} AND [Program Outcome] = "${poName}"` },
+    { name: "po_contains_full_name",     filter: `${absAbbr} AND [Program Outcome].Contains("${poName}")` },
+    { name: "po_totext_eq",              filter: `${absAbbr} AND [Program Outcome].ToText() = "${poName}"` },
+    { name: "po_totext_contains",        filter: `${absAbbr} AND [Program Outcome].ToText().Contains("Cybersecurity Strategy")` },
+    { name: "isnotblank_po",             filter: `${absAbbr} AND IsNotBlank([Program Outcome])` },
   ];
   const results = [];
   for (const t of tests) {
@@ -994,7 +998,7 @@ app.get("/api/_probe", async (req, res) => {
       results.push({ test: t.name, filter: t.filter, error: String(err.message).slice(0, 400) });
     }
   }
-  res.json({ results });
+  res.json({ sampleRow, tests: results });
 });
 
 // ─── Health ──────────────────────────────────────────────────────────────────
