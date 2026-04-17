@@ -1,6 +1,6 @@
 # PDOW Exporter — RESUME
 
-**Last updated:** 2026-04-17 (v16 delivery + repo packaging)
+**Last updated:** 2026-04-17 (v16 delivery + repo packaging + Windows fd fix)
 **User:** Keith (WGU instructional design). Working in Coda doc `4YIajnJqvo` ("Design & Development V3").
 
 ---
@@ -96,7 +96,9 @@ The hard part is done — filter idioms are known, writer is stable, template is
 
 ## Environment
 
-Python 3.10+ with `openpyxl`. For formula recalculation on the final xlsx, the writer uses headless LibreOffice (`libreoffice --headless --calc`). If it's not available, the xlsx still opens — Excel recalculates on open — but Standard Path term totals show `#VALUE!` until then.
+Python 3.10+ with `openpyxl` and `Pillow` (Pillow is needed for the owl image embed). For formula recalculation on the final xlsx, the writer uses headless LibreOffice (`libreoffice --headless --calc`). If it's not available, the xlsx still opens — Excel recalculates on open — but Standard Path term totals show `#VALUE!` until then.
+
+**Windows note:** `_strip_stale_vml_comments` in `xlsx_writer.py` previously leaked the temp fd from `tempfile.mkstemp`, which caused `WinError 32` on `shutil.move` at the end of the write. Fixed 2026-04-17 (commit `094406e`) by closing the fd explicitly.
 
 ---
 
