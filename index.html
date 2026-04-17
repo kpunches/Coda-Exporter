@@ -568,8 +568,6 @@ const css = `
 // ─── Main App ─────────────────────────────────────────────────────────────────
 function App() {
   const [docId,      setDocId]      = useState("4YIajnJqvo");
-  const [code,       setCode]       = useState("");
-  const [cname,      setCname]      = useState("");
   const [docType,    setDocType]    = useState("CCW");
   const [phase,      setPhase]      = useState("idle");
   const [stepIdx,    setStepIdx]    = useState(-1);
@@ -586,6 +584,14 @@ function App() {
   const [programsLoading, setProgramsLoading] = useState(true);
   const [programsErr,     setProgramsErr]     = useState("");
   const [programAbbr,     setProgramAbbr]     = useState("");
+
+  // Courses for the selected program. Re-fetched every time programAbbr
+  // changes; selection is cleared on program change so the user doesn't carry
+  // a course from a different program.
+  const [courses,        setCourses]        = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [coursesErr,     setCoursesErr]     = useState("");
+  const [courseId,       setCourseId]       = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -611,16 +617,61 @@ function App() {
     return () => { cancelled = true; };
   }, []);
 
+  // Fetch courses whenever the program selection changes. Deliberately clears
+  // any prior course selection — a course from one program wouldn't be valid
+  // for another, and the junction row IDs differ per program.
+  useEffect(() => {
+    setCourseId("");
+    setCourses([]);
+    setCoursesErr("");
+    if (!programAbbr) {
+      setCoursesLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setCoursesLoading(true);
+    (async () => {
+      try {
+        const resp = await fetch(`${PROXY_URL}/api/courses?programAbbr=${encodeURIComponent(programAbbr)}`);
+        const body = await resp.json().catch(() => null);
+        if (!resp.ok) {
+          const msg = body?.error || `HTTP ${resp.status}`;
+          throw new Error(msg);
+        }
+        if (!cancelled) {
+          setCourses(body?.courses || []);
+          setCoursesLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setCoursesErr(err.message);
+          setCoursesLoading(false);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [programAbbr]);
+
   const effDocId  = docId.trim() || "4YIajnJqvo";
-  const cleanCode = code.trim().toUpperCase();
-  const cleanName = cname.trim();
-  const hasInput  = cleanCode.length > 0 || cleanName.length > 2;
   const docCustom = docId.trim() && docId.trim() !== "4YIajnJqvo";
-  const primary   = cleanCode.split(",")[0].trim();
+
+  // Selected course object (or null). All downstream displays + the CCW
+  // fetch key off this — cleanCode/cleanName are preserved as names because
+  // the existing DOCX builder and confirm summary reference them.
+  const selectedCourse = courses.find(c => c.progCourseId === courseId) || null;
+  const cleanCode = selectedCourse?.code || "";
+  const cleanName = selectedCourse?.name || "";
+  const primary   = cleanCode;
+  const hasInput  = !!selectedCourse;
   const fname     = (primary || "COURSE") + "_" + docType + ".docx";
 
   const showConfirm = hasInput && phase === "idle";
   const canExport   = hasInput && phase !== "running";
+
+  // Course-name-sorted view of the same list — used by the second dropdown so
+  // users navigating by title get an alphabetical list without disturbing the
+  // code-sorted primary dropdown.
+  const coursesByName = [...courses].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
   const pct = stepIdx < 0 ? 0 : Math.round((stepIdx / (STEPS.length - 1)) * 100);
 
@@ -734,25 +785,55 @@ function App() {
               ))}
             </select>
             {programsErr && <span className="hint" style={{color:"#b91c1c"}}>Couldn't fetch programs: {programsErr}</span>}
-            {!programsErr && <span className="hint">Used by PDOW exports; will filter the course list once that's wired up.</span>}
+            {!programsErr && <span className="hint">Drives the course list below.</span>}
           </div>
         </div>
 
-        {/* Course */}
+        {/* Course — two dropdowns that share a single selection. Both pull
+             from courses (the program's course list). Users can pick by code
+             or by name — picking either updates courseId, which drives every
+             downstream display. Both disabled until a program is selected. */}
         <div className="card">
           <div className="clabel">Course</div>
           <div className="field">
             <label htmlFor="code">Course code</label>
-            <input type="text" id="code" placeholder="D946" value={code}
-              onChange={e=>{setCode(e.target.value);clearStatus();}}
-              className={cleanCode.length>0?"ok":""}/>
+            <select id="code"
+              value={courseId}
+              disabled={!programAbbr || coursesLoading || !!coursesErr}
+              onChange={e=>{setCourseId(e.target.value);clearStatus();}}
+              className={courseId ? "ok" : ""}>
+              <option value="">{
+                !programAbbr ? "— Select a program first —" :
+                coursesLoading ? "Loading courses…" :
+                coursesErr ? "Failed to load" :
+                courses.length === 0 ? "No courses in this program" :
+                "— Select —"
+              }</option>
+              {courses.map(c => (
+                <option key={c.progCourseId} value={c.progCourseId}>{c.code} — {c.name}</option>
+              ))}
+            </select>
           </div>
           <div className="field">
-            <label htmlFor="cname">Course name <span className="opt">(optional)</span></label>
-            <input type="text" id="cname" placeholder="Chronic Care Across the Lifespan…" value={cname}
-              onChange={e=>{setCname(e.target.value);clearStatus();}}
-              className={cleanName.length>0?"ok":""}/>
-            <span className="hint">Provide if code is unknown — Claude will search by name</span>
+            <label htmlFor="cname">Course name</label>
+            <select id="cname"
+              value={courseId}
+              disabled={!programAbbr || coursesLoading || !!coursesErr}
+              onChange={e=>{setCourseId(e.target.value);clearStatus();}}
+              className={courseId ? "ok" : ""}>
+              <option value="">{
+                !programAbbr ? "— Select a program first —" :
+                coursesLoading ? "Loading courses…" :
+                coursesErr ? "Failed to load" :
+                courses.length === 0 ? "No courses in this program" :
+                "— Select —"
+              }</option>
+              {coursesByName.map(c => (
+                <option key={c.progCourseId} value={c.progCourseId}>{c.name} ({c.code})</option>
+              ))}
+            </select>
+            {coursesErr && <span className="hint" style={{color:"#b91c1c"}}>Couldn't fetch courses: {coursesErr}</span>}
+            {!coursesErr && <span className="hint">Picking either dropdown selects the same course.</span>}
           </div>
         </div>
 
@@ -879,7 +960,7 @@ function App() {
 
         <div className="footer">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5.5" stroke="currentColor" strokeWidth=".8"/><path d="M6 5v3.5M6 4v-.5" stroke="currentColor" strokeWidth=".9" strokeLinecap="round"/></svg>
-          Batch export: comma-separated codes — D945, D946, D947
+          Pick a program first, then a course. Both dropdowns point at the same selection.
         </div>
 
       </div>

@@ -55,8 +55,10 @@ const CC = {
 
 // Program–Course pairing row column IDs (PC_TABLE)
 const PC = {
-  cctRowIds: "c-6ucKx1qPTM",      // refs to CCT_TABLE (only aligned ones)
-  poRowIds:  "c-jkdSmFgPaR",      // refs to PO_TABLE
+  programRef: "c-UaE_k1Ivfh",      // ref → programs
+  courseRef:  "c-aGpuFk4ifn",      // ref → courses (base)
+  cctRowIds:  "c-6ucKx1qPTM",      // refs to CCT_TABLE (only aligned ones)
+  poRowIds:   "c-jkdSmFgPaR",      // refs to PO_TABLE
 };
 
 // Competency-level column IDs
@@ -114,6 +116,22 @@ function asSlate(raw) {
   if (typeof v === "string") return v;
   if (typeof v === "object" && (v.type === "slate" || v.root)) return v;
   return "";
+}
+
+// Single-ref column extractor → returns the refd row identifier ("i-…") or null.
+// Covers: direct ref objects ({identifier, name}), MCP-wrapped content,
+// and arr-of-one-ref shapes. Returns null if empty.
+function extractRefId(raw) {
+  const v = unwrap(raw);
+  if (!v) return null;
+  if (typeof v === "string") return v;
+  if (typeof v === "object") {
+    if (v.type === "arr" && Array.isArray(v.value) && v.value[0]) {
+      return v.value[0].identifier || v.value[0].id || null;
+    }
+    return v.identifier || v.id || null;
+  }
+  return null;
 }
 
 function asRelationIds(raw) {
@@ -199,6 +217,27 @@ async function mcpCallTool(toolName, args) {
   } finally {
     try { await client.close(); } catch {}
   }
+}
+
+// ─── Paginated read for tables that may exceed rowLimit (100) ─────────────────
+// Coda MCP caps rowLimit at 100 per call; many tables (prog_courses, PCC,
+// alignment junctions) regularly exceed that. Follows nextPageToken until the
+// table is fully consumed, with a safety cap to prevent runaway loops if the
+// token ever fails to clear.
+async function mcpReadAllRows(docId, tableGridId) {
+  const uri = `coda://docs/${docId}/tables/${tableGridId}`;
+  const allRows = [];
+  let pageToken = null;
+  for (let page = 0; page < 50; page++) {
+    const args = { uri, rowLimit: 100 };
+    if (pageToken) args.pageToken = pageToken;
+    const result = await mcpCallTool("table_rows_read", args);
+    allRows.push(...(result.rows || []));
+    pageToken = result.nextPageToken || null;
+    if (!pageToken) return allRows;
+  }
+  console.warn(`mcpReadAllRows: hit 50-page safety cap on ${tableGridId}; returning ${allRows.length} rows`);
+  return allRows;
 }
 
 // ─── CFL escape for user input in filterFormula ──────────────────────────────
@@ -423,6 +462,80 @@ app.get("/api/programs", async (req, res) => {
 
     console.log(`  done ${Date.now() - t0}ms — ${programs.length} programs`);
     res.json({ programs });
+  } catch (err) {
+    console.error(`  ERROR: ${err.message}`);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Courses for a program (PDOW + future course dropdown) ──────────────────
+// Given a program abbreviation (MSCSIA, MSCIN, …), return the courses
+// belonging to that program as [{progCourseId, code, name}] sorted by code.
+//
+// Strategy (matches pdow_exporter/extractor.py):
+//   1. Fetch _Programs, find the row whose abbreviation matches → programRowId.
+//   2. Fetch _Progs | _Courses (paginated) — junction of program × course.
+//   3. Client-side filter to rows whose program ref matches programRowId.
+//      (Filtering a ref column server-side with CFL is fragile — see RESUME
+//      trap #3. Reading and filtering here is cheap and reliable.)
+//   4. Join against _Courses (base) to pull code + name for each match.
+app.get("/api/courses", async (req, res) => {
+  const t0 = Date.now();
+  try {
+    const docId = req.query.docId || "4YIajnJqvo";
+    const programAbbr = String(req.query.programAbbr || "").trim();
+    if (!programAbbr) {
+      return res.status(400).json({ error: "programAbbr is required" });
+    }
+
+    console.log(`\n[${new Date().toISOString()}] GET /api/courses programAbbr=${programAbbr} docId=${docId}`);
+
+    // 1. Resolve the program row ID from the abbreviation.
+    const progResult = await mcpCallTool("table_rows_read", {
+      uri: `coda://docs/${docId}/tables/${PROGRAMS_TABLE}`,
+      rowLimit: 100,
+    });
+    const programRow = (progResult.rows || []).find(r =>
+      asString((r.values || {})[PROGRAMS_ABBR]).trim() === programAbbr
+    );
+    if (!programRow) {
+      return res.status(404).json({ error: `Program not found: ${programAbbr}` });
+    }
+    const programRowId = programRow.id || programRow.rowId;
+    console.log(`  program ${programAbbr} → ${programRowId}`);
+
+    // 2 + 3. Paginated fetch of prog_courses, filter by program ref.
+    const allPcRows = await mcpReadAllRows(docId, PC_TABLE);
+    const matchedPcRows = allPcRows.filter(r =>
+      extractRefId((r.values || {})[PC.programRef]) === programRowId
+    );
+    console.log(`  prog_courses: ${matchedPcRows.length}/${allPcRows.length} match`);
+
+    // 4. Build a course-base lookup so we can join for code + name.
+    const allBaseRows = await mcpReadAllRows(docId, COURSE_TABLE);
+    const baseByRowId = {};
+    for (const r of allBaseRows) {
+      baseByRowId[r.id || r.rowId] = {
+        code: asString((r.values || {})[CC.courseCode]).trim(),
+        name: asString((r.values || {})[CC.courseName]).trim(),
+      };
+    }
+
+    const courses = matchedPcRows
+      .map(r => {
+        const baseId = extractRefId((r.values || {})[PC.courseRef]);
+        const base = baseByRowId[baseId] || {};
+        return {
+          progCourseId: r.id || r.rowId,
+          code: base.code || "",
+          name: base.name || "",
+        };
+      })
+      .filter(c => c.code)                                        // drop rows with no code
+      .sort((a, b) => a.code.localeCompare(b.code));
+
+    console.log(`  done ${Date.now() - t0}ms — ${courses.length} courses`);
+    res.json({ courses });
   } catch (err) {
     console.error(`  ERROR: ${err.message}`);
     res.status(500).json({ error: err.message });
