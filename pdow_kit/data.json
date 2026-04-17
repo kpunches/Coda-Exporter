@@ -1,0 +1,2743 @@
+{
+  "program_code": "MSCSIA",
+  "model": {
+    "program": {
+      "id": "i--VmcaKTylm",
+      "name": "M.S. Cybersec & Information Assurance"
+    },
+    "program_outcomes": [
+      {
+        "id": "i-4MSH5Bo8aN",
+        "name": "Cybersecurity Strategy and Risk Management",
+        "description": "The graduate develops cybersecurity plans, strategies, policies, and risk management frameworks to align with organizational goals, regulatory compliance requirements, and emerging technologies including artificial intelligence."
+      },
+      {
+        "id": "i-AtlW5iPFg-",
+        "name": "Secure Network, Cloud, and Enterprise Architecture Design",
+        "description": "The graduate designs and implements secure network, cloud, and enterprise architectures that incorporate cryptographic controls and Identity and Access Management (IAM) frameworks to ensure confidentiality, integrity, and availability of organizational information assets."
+      },
+      {
+        "id": "i-s38p6SqZpY",
+        "name": "Human-Centered Security in Software and AI Systems",
+        "description": "The graduate applies security principles, ethical practices, and human-centered design to software, AI systems, and cloud-based solutions throughout their lifecycles."
+      },
+      {
+        "id": "i-BKbajtfrlD",
+        "name": "Threat Analysis and Infrastructure Defense",
+        "description": "The graduate defends information technology infrastructure by identifying vulnerabilities, analyzing cybersecurity threats, and implementing countermeasures and security practices to mitigate risks."
+      },
+      {
+        "id": "i-l_Maz_Qi3P",
+        "name": "Ethical, Legal, and Social Dimensions of Cybersecurity and AI",
+        "description": "The graduate evaluates ethical, legal, and social implications of cybersecurity and AI technologies by applying human-centered security practices, responsible AI principles with secure implementation, and privacy-preserving approaches to promote organizational trust and societal benefit."
+      }
+    ],
+    "ccts": [
+      {
+        "id": "i-GOwzoAE6nA",
+        "name": "Risk Management and Compliance",
+        "description": "Develop and apply best practices that identify, assess, and treat risk at the organizational level, while establishing governance structures that ensure ongoing compliance with regulatory and industry requirements."
+      },
+      {
+        "id": "i-VpmGsF6fdL",
+        "name": "Integration of Artificial Intelligence",
+        "description": "Evaluate, design, and operationalize AI capabilities within cybersecurity programs, including detection, response, and secure AI adoption that measurably improves security outcomes while satisfying compliance and ethical standards."
+      },
+      {
+        "id": "i-60dxS64cyf",
+        "name": "Technical Skill and Policy Writing",
+        "description": "Applies technical proficiency skills in writing policies and standards that ensure security."
+      },
+      {
+        "id": "i-bKEkKFt1HO",
+        "name": "Leading a Security Program",
+        "description": "Applies leadership behaviors and management skills to build and maintain a cybersecurity program."
+      }
+    ],
+    "courses": [
+      {
+        "prog_course_id": "i-5KvaluNhGb",
+        "course_base_id": "i-ATB4zvvKsO",
+        "code": "E123",
+        "name": "Cybersecurity Fundamentals",
+        "display_name": "E123: Cybersecurity Fundamentals",
+        "term": "1",
+        "std_path_order": 1,
+        "cu": 2,
+        "scope": "Redesign",
+        "ownership": "School of Technology",
+        "designation": "Major",
+        "certificate": "",
+        "po_alignments": {},
+        "cct_alignments": {},
+        "competencies": [
+          {
+            "pcc_id": "i-1uW8QiNqLe",
+            "prog_course_id": "i-5KvaluNhGb",
+            "title": "Applies Modern Cybersecurity Principles",
+            "statement": "The learner applies principles of cybersecurity to organizational and technological contexts, including the modern significance of cybersecurity.",
+            "level": 2,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i--qbgDUybm_",
+            "prog_course_id": "i-5KvaluNhGb",
+            "title": "Applies Basic Networking Principles, Security Methods, and Implementation Strategies",
+            "statement": "The learner applies basic networking principles, security methods, and implementation strategies to better secure networks.",
+            "level": 2,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-VOX1WCsASn",
+            "prog_course_id": "i-5KvaluNhGb",
+            "title": "Conducts a Risk Assessment using Frameworks",
+            "statement": "The learner conducts a risk assessment and analysis using industry frameworks for the stakeholders of an organization.",
+            "level": 2,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          }
+        ],
+        "scope_notes": "This course is a reimagining of the existing Security Foundations course, focused on cybersecurity fundamentals that include security foundations, network security basics, new and emerging technology (including AI and OT (Operational technology) like industrial control systems), and a brief introduction to human security and human factors. A majority of this course is survey-level, where the remaining minority is focused on network security and basic risk management.",
+        "description": ""
+      },
+      {
+        "prog_course_id": "i-hBdkIRtsQ8",
+        "course_base_id": "i-KzniqYfsHm",
+        "code": "D482",
+        "name": "Secure Network Design",
+        "display_name": "D482: Secure Network Design",
+        "term": "1",
+        "std_path_order": 2,
+        "cu": 3,
+        "scope": "Existing",
+        "ownership": "School of Technology",
+        "designation": "Major",
+        "certificate": "",
+        "po_alignments": {},
+        "cct_alignments": {},
+        "competencies": [
+          {
+            "pcc_id": "i-4iAHxxm3BA",
+            "prog_course_id": "i-hBdkIRtsQ8",
+            "title": "Assesses Business Needs and Network Security",
+            "statement": "The learner assesses business and technology needs, network security vulnerabilities, and security strategies. ",
+            "level": 2,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-FPEdLLtVW-",
+            "prog_course_id": "i-hBdkIRtsQ8",
+            "title": "Aligns Secure Network Architecture",
+            "statement": "The learner aligns secure network architectures with industry best practices and the principles of secure network design. ",
+            "level": 2,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-fVtXf5NRo7",
+            "prog_course_id": "i-hBdkIRtsQ8",
+            "title": "Recommends Network Security Solutions",
+            "statement": "The learner recommends network security and vulnerability solutions.",
+            "level": 2,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          }
+        ],
+        "scope_notes": "",
+        "description": "Secure Network Design provides the foundational knowledge and skills to design secure physical and logical network architectures for wired and wireless networks. Course topics include the characteristics of a secure network, techniques to securely configure network devices, network segmentation strategies, root cause analysis, and mitigation approaches based on industry best practices. The course also offers hands-on experience in network vulnerability analysis and network configuration."
+      },
+      {
+        "prog_course_id": "i-N-XwVO_Kie",
+        "course_base_id": "i-m4uEhiIL-f",
+        "code": "D487",
+        "name": "Secure Software Design",
+        "display_name": "D487: Secure Software Design",
+        "term": "1",
+        "std_path_order": 3,
+        "cu": 3,
+        "scope": "Existing",
+        "ownership": "School of Technology",
+        "designation": "Major",
+        "certificate": "",
+        "po_alignments": {},
+        "cct_alignments": {},
+        "competencies": [
+          {
+            "pcc_id": "i-elqNIucdrY",
+            "prog_course_id": "i-N-XwVO_Kie",
+            "title": "Examines Security Methods within SDLC",
+            "statement": "The learner examines security principles, standards, and methods within the software development life cycle (SDLC). ",
+            "level": 2,
+            "assessment": "OA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-1ro_H1jfr-",
+            "prog_course_id": "i-N-XwVO_Kie",
+            "title": "Assesses Software Requirements and Risks",
+            "statement": "The learner assesses software requirements and risks to ensure threats are addressed.",
+            "level": 2,
+            "assessment": "OA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-p4KJB0J6TY",
+            "prog_course_id": "i-N-XwVO_Kie",
+            "title": "Evaluates Software Security Test Plan",
+            "statement": "The learner evaluates software security test plan documentation and implementation strategies. ",
+            "level": 2,
+            "assessment": "OA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-tOJiVf7V_b",
+            "prog_course_id": "i-N-XwVO_Kie",
+            "title": "Evaluates Effectiveness of Software Testing",
+            "statement": "The learner evaluates the effectiveness of software testing and deployment to ensure security and privacy issues are addressed.",
+            "level": 2,
+            "assessment": "OA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          }
+        ],
+        "scope_notes": "",
+        "description": "Secure Software Design focuses on the variety of elements needed to address and implement secure software acquisition and development throughout the software development life cycle (SDLC). The course addresses people, technology, tools, and processes to design and develop consistently secure applications from start to finish. Additionally, it underscores the importance and value of the Defense in Depth principle across the entire SDLC. The course also introduces techniques to adapt common security activities to modern software development practices such as Agile and DevSecOps."
+      },
+      {
+        "prog_course_id": "i-PGzFHOv9vx",
+        "course_base_id": "i-jYlJMhn-_w",
+        "code": "D483",
+        "name": "Security Operations",
+        "display_name": "D483: Security Operations",
+        "term": "2",
+        "std_path_order": 4,
+        "cu": 4,
+        "scope": "Existing",
+        "ownership": "School of Technology",
+        "designation": "Major",
+        "certificate": "",
+        "po_alignments": {},
+        "cct_alignments": {},
+        "competencies": [
+          {
+            "pcc_id": "i-8ntUfX2x_y",
+            "prog_course_id": "i-PGzFHOv9vx",
+            "title": "Manages Security Testing and Response",
+            "statement": "The learner manages security testing and response in defense of organizational threats and vulnerabilities.",
+            "level": 2.6666666666666665,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-amECrZryQh",
+            "prog_course_id": "i-PGzFHOv9vx",
+            "title": "Applies Software and System Security",
+            "statement": "The learner applies software and system security controls and procedures for data protection.",
+            "level": 2.6666666666666665,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-jJXrrdb8ci",
+            "prog_course_id": "i-PGzFHOv9vx",
+            "title": "Applies Improvement Techniques and Automation",
+            "statement": "The learner applies improvement techniques and automation based on system monitoring and threat hunting. ",
+            "level": 2.6666666666666665,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-vehyuPNez2",
+            "prog_course_id": "i-PGzFHOv9vx",
+            "title": "Applies Incident Response Procedures",
+            "statement": "The learner applies incident response procedures based on digital forensic analysis.",
+            "level": 2.6666666666666665,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-VQLkEbyIe_",
+            "prog_course_id": "i-PGzFHOv9vx",
+            "title": "Applies Security Concepts to Risk Management",
+            "statement": "The learner applies security concepts to risk mitigation with regards to privacy and protection.",
+            "level": 2.6666666666666665,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-cSq_9vYhjd",
+            "prog_course_id": "i-PGzFHOv9vx",
+            "title": "Recommends Incident Response Solutions",
+            "statement": "The learner recommends solutions to respond to a detected cybersecurity incident.",
+            "level": 2.6666666666666665,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          }
+        ],
+        "scope_notes": "",
+        "description": "Security Operations builds skills in managing security testing, incident response, and continuous monitoring of IT infrastructure. Students learn to apply security tools and techniques to identify vulnerabilities, respond to incidents, and maintain the security posture of systems."
+      },
+      {
+        "prog_course_id": "i-TYNmNslsjU",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "code": "D485",
+        "name": "Cloud Security",
+        "display_name": "D485: Cloud Security",
+        "term": "2",
+        "std_path_order": 5,
+        "cu": 4,
+        "scope": "Existing",
+        "ownership": "School of Technology",
+        "designation": "Major",
+        "certificate": "",
+        "po_alignments": {},
+        "cct_alignments": {},
+        "competencies": [
+          {
+            "pcc_id": "i-GwmaPfCjQN",
+            "prog_course_id": "i-TYNmNslsjU",
+            "title": "Designs Secure Cloud Solutions",
+            "statement": "The learner designs secure cloud solutions for data protection. ",
+            "level": 2.6666666666666665,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-biO2Y51QXJ",
+            "prog_course_id": "i-TYNmNslsjU",
+            "title": "Implements Security Cloud Solutions",
+            "statement": "The learner implements secure identity and access management cloud solutions for data protection. ",
+            "level": 2.6666666666666665,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-KgpKwNXzkL",
+            "prog_course_id": "i-TYNmNslsjU",
+            "title": "Analyzes Risk Management Plans",
+            "statement": "The learner analyzes a risk management plan for threat mitigation countermeasures in the cloud. ",
+            "level": 2.6666666666666665,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          }
+        ],
+        "scope_notes": "",
+        "description": "Cloud Security addresses designing and implementing secure solutions for cloud-based systems. Topics include cloud service models, shared responsibility, identity and access management in the cloud, data protection, and cloud-native security controls."
+      },
+      {
+        "prog_course_id": "i-hl6pX9EWfq",
+        "course_base_id": "i-8SY7daa3NP",
+        "code": "D484",
+        "name": "Penetration Testing",
+        "display_name": "D484: Penetration Testing",
+        "term": "3",
+        "std_path_order": 6,
+        "cu": 4,
+        "scope": "Existing",
+        "ownership": "School of Technology",
+        "designation": "Major",
+        "certificate": "",
+        "po_alignments": {},
+        "cct_alignments": {},
+        "competencies": [
+          {
+            "pcc_id": "i-Z8TiOfNQxg",
+            "prog_course_id": "i-hl6pX9EWfq",
+            "title": "Defines Penetration Testing Engagement",
+            "statement": "The learner defines the scope and planning for procurement of penetration testing engagements.",
+            "level": 2.5,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-V_8IZ4xEHV",
+            "prog_course_id": "i-hl6pX9EWfq",
+            "title": "Performs Cyber Reconnaissance",
+            "statement": "The learner performs cyber reconnaissance techniques for information gathering and vulnerability identification.",
+            "level": 2.5,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-Sp3rciDLws",
+            "prog_course_id": "i-hl6pX9EWfq",
+            "title": "Develops Penetration Testing Techniques",
+            "statement": "The learner develops penetration testing techniques in exploitation of physical, digital, and social vulnerabilities.",
+            "level": 2.5,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-ZTHdX7RfEJ",
+            "prog_course_id": "i-hl6pX9EWfq",
+            "title": "Simulates Attacks and Responses",
+            "statement": "The learner simulates attacks and responses on an organization's security infrastructure.",
+            "level": 2.5,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-oPRsTIz_zE",
+            "prog_course_id": "i-hl6pX9EWfq",
+            "title": "Reports Cybersecurity Assessments and Actions",
+            "statement": "The learner reports the results of cybersecurity assessments with recommended actions.",
+            "level": 2.5,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-oWgPlYCxMb",
+            "prog_course_id": "i-hl6pX9EWfq",
+            "title": "Evaluates a Penetration Testing Engagement Plan",
+            "statement": "The learner evaluates a penetration testing engagement plan.",
+            "level": 2.5,
+            "assessment": "Certification+PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          }
+        ],
+        "scope_notes": "",
+        "description": "Penetration Testing teaches learners to plan, execute, and report on authorized offensive security engagements. Topics include reconnaissance, vulnerability analysis, exploitation techniques, and post-exploitation activities across networks, systems, and applications."
+      },
+      {
+        "prog_course_id": "i-G1IWjbNavq",
+        "course_base_id": "i-goi7k0AsGH",
+        "code": "D488",
+        "name": "Cybersecurity Architecture and Engineering",
+        "display_name": "D488: Cybersecurity Architecture and Engineering",
+        "term": "3",
+        "std_path_order": 7,
+        "cu": 4,
+        "scope": "Existing",
+        "ownership": "School of Technology",
+        "designation": "Major",
+        "certificate": "",
+        "po_alignments": {},
+        "cct_alignments": {},
+        "competencies": [
+          {
+            "pcc_id": "i-lY6rG_J0WU",
+            "prog_course_id": "i-G1IWjbNavq",
+            "title": "Designs Secure Network Architecture",
+            "statement": "The learner designs secure network architecture solutions for the enterprise.",
+            "level": 2.5,
+            "assessment": "OA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-MakbqUGa_q",
+            "prog_course_id": "i-G1IWjbNavq",
+            "title": "Implements Secure Solutions",
+            "statement": "The learner implements secure solutions to manage cybersecurity risks. ",
+            "level": 2.5,
+            "assessment": "OA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-u68wJZrvOh",
+            "prog_course_id": "i-G1IWjbNavq",
+            "title": "Designs Integration of Cybersecurity Solutions",
+            "statement": "The learner designs technical integration of cybersecurity solutions to protect enterprises.",
+            "level": 2.5,
+            "assessment": "OA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-KnwLViUZQc",
+            "prog_course_id": "i-G1IWjbNavq",
+            "title": "Develops Secure Architecture for Governance, Risk, and Compliance",
+            "statement": "The learner develops secure architecture to comply with organizational governance, risk, and compliance strategies.",
+            "level": 2.5,
+            "assessment": "OA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          }
+        ],
+        "scope_notes": "",
+        "description": "Cybersecurity Architecture and Engineering covers the design of secure systems and networks. Students learn to apply security principles to architecture decisions, implement security controls at scale, and evaluate the security properties of technical solutions."
+      },
+      {
+        "prog_course_id": "i-3Gk2-onb2E",
+        "course_base_id": "i-stVHWsUqJb",
+        "code": "E122",
+        "name": "Human-Centric Risk in Cybersecurity",
+        "display_name": "E122: Human-Centric Risk in Cybersecurity",
+        "term": "3",
+        "std_path_order": 8,
+        "cu": 2,
+        "scope": "Redesign",
+        "ownership": "School of Technology",
+        "designation": "Major",
+        "certificate": "",
+        "po_alignments": {},
+        "cct_alignments": {},
+        "competencies": [
+          {
+            "pcc_id": "i-Nu7VKWUbxH",
+            "prog_course_id": "i-3Gk2-onb2E",
+            "title": "Describes Significance of Human-Centric Risk in Cybersecurity",
+            "statement": "The learner describes human-centric risk factors and their significance in cybersecurity.",
+            "level": 2.25,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-RcNQuu3lRJ",
+            "prog_course_id": "i-3Gk2-onb2E",
+            "title": "Analyzes Human-Centric Risk Factors in Cybersecurity",
+            "statement": "The learner analyzes cybersecurity vulnerabilities related to human behavior, cyberpsychology, and social engineering.",
+            "level": 2.25,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-R-BpDe_IkI",
+            "prog_course_id": "i-3Gk2-onb2E",
+            "title": "Develops a Culture of Security in an Organization",
+            "statement": "The learner develops a culture of security in an organization that cultivates a secure community through technical and procedural controls, human-centric cybersecurity challenges, and cybercrime risk factors.",
+            "level": 2.25,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-iCW3qVt1TG",
+            "prog_course_id": "i-3Gk2-onb2E",
+            "title": "Applies Privacy by Design Principles",
+            "statement": "The learner applies privacy by design principles to common cybersecurity issues, problems, programs, and applications.",
+            "level": 2.25,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          }
+        ],
+        "scope_notes": "This course doubles down on what humans do in the world of cybersecurity; an extension of the cybersecurity realm that includes the human angle. It addresses the human factor head on through definition, identified threats, and applied strategies. Topics include risk analysis with cyberpsychology, open-source intelligence (OSINT), modern technology threats (including AI), privacy, social engineering, and insider threats. Learners will explore methods to instill security practices in the workforce, where everyone is part of the security team, and where security teams build trust within workgroups.",
+        "description": ""
+      },
+      {
+        "prog_course_id": "i-1h7bZ1YEi5",
+        "course_base_id": "i-zV3gie6I3B",
+        "code": "D489",
+        "name": "Cybersecurity Management",
+        "display_name": "D489: Cybersecurity Management",
+        "term": "4",
+        "std_path_order": 9,
+        "cu": 4,
+        "scope": "Existing",
+        "ownership": "School of Technology",
+        "designation": "Major",
+        "certificate": "",
+        "po_alignments": {},
+        "cct_alignments": {},
+        "competencies": [
+          {
+            "pcc_id": "i-kN4Whq_gFD",
+            "prog_course_id": "i-1h7bZ1YEi5",
+            "title": "Describes Security Risks, Standards, and Roles",
+            "statement": "The learner describes the risks, standards, and roles that inform a company\u2019s information security policy. ",
+            "level": 2,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-709GllEeGf",
+            "prog_course_id": "i-1h7bZ1YEi5",
+            "title": "Develops Security Policies and Guidelines",
+            "statement": "The learner develops security policy, standards, procedures, and guidelines to strategically secure an organization\u2019s assets. ",
+            "level": 2,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          }
+        ],
+        "scope_notes": "",
+        "description": "Cybersecurity Management introduces students to the management functions and leadership skills required to direct a cybersecurity program. Topics include risk management, policy development, security governance, and the role of the security leader in organizations."
+      },
+      {
+        "prog_course_id": "i-ytWQleCouz",
+        "course_base_id": "i-q2kP8lsQww",
+        "code": "E121",
+        "name": "Governance, Risk, and Compliance in the Age of Artificial Intelligence",
+        "display_name": "E121: Governance, Risk, and Compliance in the Age of Artificial Intelligence",
+        "term": "4",
+        "std_path_order": 10,
+        "cu": 2,
+        "scope": "Redesign",
+        "ownership": "School of Technology",
+        "designation": "Major",
+        "certificate": "",
+        "po_alignments": {},
+        "cct_alignments": {},
+        "competencies": [
+          {
+            "pcc_id": "i-do7f5SzsNW",
+            "prog_course_id": "i-ytWQleCouz",
+            "title": "Applies Principles and Frameworks of Governance, Risk, and Compliance",
+            "statement": "The learner applies the principles and frameworks of Governance, Risk, and Compliance to the needs and objectives of an organization.",
+            "level": 2.75,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-wOJpausY_O",
+            "prog_course_id": "i-ytWQleCouz",
+            "title": "Implements AI Security Solutions",
+            "statement": "The learner implements AI security solutions that include effective policy, data governance, program management, and incident response.",
+            "level": 2.75,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-DOEFquqsxM",
+            "prog_course_id": "i-ytWQleCouz",
+            "title": "Analyzes Risks of AI Adoption",
+            "statement": "The learner analyzes risks, threats, vulnerabilities, and supply chain issues related to adoption of AI.",
+            "level": 2.75,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          },
+          {
+            "pcc_id": "i-sf5BLPAcnl",
+            "prog_course_id": "i-ytWQleCouz",
+            "title": "Optimizes Security with AI",
+            "statement": "The learner optimizes security with AI using technologies, processes, and controls tailored to AI and machine learning governance.",
+            "level": 2.75,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          }
+        ],
+        "scope_notes": "Reimagining of the existing D486 course, focused on recontextualizing the course with modern technologies, specifically AI. This course will include content on modern frameworks (like NIST) for new technology risks in the world of cybersecurity. This course is for a director-level experience in GRC. The course is designed in alignment with ISACA's AAISM certification, where competencies have been developed to align with the 3 dimensions of the AAISM certification.",
+        "description": ""
+      },
+      {
+        "prog_course_id": "i-20bcoVkESf",
+        "course_base_id": "i-x9VVwNTpOl",
+        "code": "D490",
+        "name": "Cybersecurity Graduate Capstone",
+        "display_name": "D490: Cybersecurity Graduate Capstone",
+        "term": "4",
+        "std_path_order": 11,
+        "cu": 4,
+        "scope": "Existing",
+        "ownership": "School of Technology",
+        "designation": "Major",
+        "certificate": "",
+        "po_alignments": {},
+        "cct_alignments": {},
+        "competencies": [
+          {
+            "pcc_id": "i-9tR_0KKOZC",
+            "prog_course_id": "i-20bcoVkESf",
+            "title": "Capstone",
+            "statement": "The learner integrates and synthesizes competencies from across the degree program, thereby demonstrating the ability to participate in and contribute value to the chosen professional field.",
+            "level": 4,
+            "assessment": "PA",
+            "po_alignments": {},
+            "cct_alignments": {}
+          }
+        ],
+        "scope_notes": "",
+        "description": "Cybersecurity Graduate Capstone is the culminating experience where learners integrate knowledge and skills from the program into a substantive project demonstrating mastery of cybersecurity competencies."
+      }
+    ]
+  },
+  "alignments": {
+    "course_po": [
+      {
+        "prog_course_id": "i-ytWQleCouz",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "A",
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-ytWQleCouz",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-ytWQleCouz",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-ytWQleCouz",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-ytWQleCouz",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-5KvaluNhGb",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-5KvaluNhGb",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-5KvaluNhGb",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-5KvaluNhGb",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-5KvaluNhGb",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-hBdkIRtsQ8",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-hBdkIRtsQ8",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-hBdkIRtsQ8",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-hBdkIRtsQ8",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-hBdkIRtsQ8",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-PGzFHOv9vx",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-PGzFHOv9vx",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-PGzFHOv9vx",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-PGzFHOv9vx",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-PGzFHOv9vx",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-hl6pX9EWfq",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-hl6pX9EWfq",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-hl6pX9EWfq",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-hl6pX9EWfq",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-hl6pX9EWfq",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-TYNmNslsjU",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-TYNmNslsjU",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-TYNmNslsjU",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-TYNmNslsjU",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-TYNmNslsjU",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-N-XwVO_Kie",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-N-XwVO_Kie",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-N-XwVO_Kie",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-N-XwVO_Kie",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-N-XwVO_Kie",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-G1IWjbNavq",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-G1IWjbNavq",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-G1IWjbNavq",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-G1IWjbNavq",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-G1IWjbNavq",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-1h7bZ1YEi5",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-1h7bZ1YEi5",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-1h7bZ1YEi5",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-1h7bZ1YEi5",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-1h7bZ1YEi5",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-20bcoVkESf",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-20bcoVkESf",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-20bcoVkESf",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-20bcoVkESf",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-20bcoVkESf",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-3Gk2-onb2E",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-3Gk2-onb2E",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-3Gk2-onb2E",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-3Gk2-onb2E",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-3Gk2-onb2E",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "A",
+          "M"
+        ]
+      }
+    ],
+    "course_cct": [
+      {
+        "prog_course_id": "i-5KvaluNhGb",
+        "cct_id": "i-GOwzoAE6nA",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-5KvaluNhGb",
+        "cct_id": "i-VpmGsF6fdL",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-5KvaluNhGb",
+        "cct_id": "i-60dxS64cyf",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-5KvaluNhGb",
+        "cct_id": "i-bKEkKFt1HO",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "prog_course_id": "i-hBdkIRtsQ8",
+        "cct_id": "i-GOwzoAE6nA",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-hBdkIRtsQ8",
+        "cct_id": "i-VpmGsF6fdL",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-hBdkIRtsQ8",
+        "cct_id": "i-60dxS64cyf",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-hBdkIRtsQ8",
+        "cct_id": "i-bKEkKFt1HO",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-N-XwVO_Kie",
+        "cct_id": "i-GOwzoAE6nA",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-N-XwVO_Kie",
+        "cct_id": "i-VpmGsF6fdL",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-N-XwVO_Kie",
+        "cct_id": "i-60dxS64cyf",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-N-XwVO_Kie",
+        "cct_id": "i-bKEkKFt1HO",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-PGzFHOv9vx",
+        "cct_id": "i-GOwzoAE6nA",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-PGzFHOv9vx",
+        "cct_id": "i-VpmGsF6fdL",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-PGzFHOv9vx",
+        "cct_id": "i-60dxS64cyf",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-PGzFHOv9vx",
+        "cct_id": "i-bKEkKFt1HO",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-TYNmNslsjU",
+        "cct_id": "i-GOwzoAE6nA",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-TYNmNslsjU",
+        "cct_id": "i-VpmGsF6fdL",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-TYNmNslsjU",
+        "cct_id": "i-60dxS64cyf",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-TYNmNslsjU",
+        "cct_id": "i-bKEkKFt1HO",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-hl6pX9EWfq",
+        "cct_id": "i-GOwzoAE6nA",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-hl6pX9EWfq",
+        "cct_id": "i-VpmGsF6fdL",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-hl6pX9EWfq",
+        "cct_id": "i-60dxS64cyf",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-hl6pX9EWfq",
+        "cct_id": "i-bKEkKFt1HO",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-G1IWjbNavq",
+        "cct_id": "i-GOwzoAE6nA",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-G1IWjbNavq",
+        "cct_id": "i-VpmGsF6fdL",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-G1IWjbNavq",
+        "cct_id": "i-60dxS64cyf",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-G1IWjbNavq",
+        "cct_id": "i-bKEkKFt1HO",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-ytWQleCouz",
+        "cct_id": "i-GOwzoAE6nA",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-ytWQleCouz",
+        "cct_id": "i-VpmGsF6fdL",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-ytWQleCouz",
+        "cct_id": "i-60dxS64cyf",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-ytWQleCouz",
+        "cct_id": "i-bKEkKFt1HO",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-1h7bZ1YEi5",
+        "cct_id": "i-GOwzoAE6nA",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-1h7bZ1YEi5",
+        "cct_id": "i-VpmGsF6fdL",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-1h7bZ1YEi5",
+        "cct_id": "i-60dxS64cyf",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-1h7bZ1YEi5",
+        "cct_id": "i-bKEkKFt1HO",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-20bcoVkESf",
+        "cct_id": "i-GOwzoAE6nA",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-20bcoVkESf",
+        "cct_id": "i-VpmGsF6fdL",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-20bcoVkESf",
+        "cct_id": "i-60dxS64cyf",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-20bcoVkESf",
+        "cct_id": "i-bKEkKFt1HO",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "prog_course_id": "i-3Gk2-onb2E",
+        "cct_id": "i-GOwzoAE6nA",
+        "letters": []
+      },
+      {
+        "prog_course_id": "i-3Gk2-onb2E",
+        "cct_id": "i-VpmGsF6fdL",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-3Gk2-onb2E",
+        "cct_id": "i-60dxS64cyf",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "prog_course_id": "i-3Gk2-onb2E",
+        "cct_id": "i-bKEkKFt1HO",
+        "letters": [
+          "R"
+        ]
+      }
+    ],
+    "comp_po": [
+      {
+        "pcc_id": "i-1uW8QiNqLe",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-1uW8QiNqLe",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-1uW8QiNqLe",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-1uW8QiNqLe",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-1uW8QiNqLe",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i--qbgDUybm_",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i--qbgDUybm_",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i--qbgDUybm_",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i--qbgDUybm_",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i--qbgDUybm_",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-VOX1WCsASn",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-VOX1WCsASn",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-VOX1WCsASn",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-VOX1WCsASn",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-VOX1WCsASn",
+        "course_base_id": "i-ATB4zvvKsO",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-do7f5SzsNW",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "A",
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-do7f5SzsNW",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-do7f5SzsNW",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-do7f5SzsNW",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-do7f5SzsNW",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-wOJpausY_O",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "A",
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-wOJpausY_O",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-wOJpausY_O",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-wOJpausY_O",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-wOJpausY_O",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-4iAHxxm3BA",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-4iAHxxm3BA",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-4iAHxxm3BA",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-4iAHxxm3BA",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-4iAHxxm3BA",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-FPEdLLtVW-",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-FPEdLLtVW-",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-FPEdLLtVW-",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-FPEdLLtVW-",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-FPEdLLtVW-",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-fVtXf5NRo7",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-fVtXf5NRo7",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-fVtXf5NRo7",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-fVtXf5NRo7",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-fVtXf5NRo7",
+        "course_base_id": "i-KzniqYfsHm",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-8ntUfX2x_y",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-8ntUfX2x_y",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-8ntUfX2x_y",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-8ntUfX2x_y",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-8ntUfX2x_y",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-amECrZryQh",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-amECrZryQh",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-amECrZryQh",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-amECrZryQh",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-amECrZryQh",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-jJXrrdb8ci",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-jJXrrdb8ci",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-jJXrrdb8ci",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-jJXrrdb8ci",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-jJXrrdb8ci",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-vehyuPNez2",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-vehyuPNez2",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-vehyuPNez2",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-vehyuPNez2",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-vehyuPNez2",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-VQLkEbyIe_",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-VQLkEbyIe_",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-VQLkEbyIe_",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-VQLkEbyIe_",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-VQLkEbyIe_",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-cSq_9vYhjd",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-cSq_9vYhjd",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-cSq_9vYhjd",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-cSq_9vYhjd",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-cSq_9vYhjd",
+        "course_base_id": "i-jYlJMhn-_w",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-Z8TiOfNQxg",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-Z8TiOfNQxg",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-Z8TiOfNQxg",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-Z8TiOfNQxg",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-Z8TiOfNQxg",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-V_8IZ4xEHV",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-V_8IZ4xEHV",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-V_8IZ4xEHV",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-V_8IZ4xEHV",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-V_8IZ4xEHV",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-Sp3rciDLws",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-Sp3rciDLws",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-Sp3rciDLws",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-Sp3rciDLws",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-Sp3rciDLws",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-ZTHdX7RfEJ",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-ZTHdX7RfEJ",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-ZTHdX7RfEJ",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-ZTHdX7RfEJ",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-ZTHdX7RfEJ",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-oPRsTIz_zE",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-oPRsTIz_zE",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-oPRsTIz_zE",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-oPRsTIz_zE",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-oPRsTIz_zE",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-oWgPlYCxMb",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-oWgPlYCxMb",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-oWgPlYCxMb",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-oWgPlYCxMb",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-oWgPlYCxMb",
+        "course_base_id": "i-8SY7daa3NP",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-GwmaPfCjQN",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-GwmaPfCjQN",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-GwmaPfCjQN",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-GwmaPfCjQN",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-GwmaPfCjQN",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-biO2Y51QXJ",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-biO2Y51QXJ",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-biO2Y51QXJ",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-biO2Y51QXJ",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-biO2Y51QXJ",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-KgpKwNXzkL",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-KgpKwNXzkL",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-KgpKwNXzkL",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "I"
+        ]
+      },
+      {
+        "pcc_id": "i-KgpKwNXzkL",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-KgpKwNXzkL",
+        "course_base_id": "i-9H5ifiQ1xL",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-elqNIucdrY",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-elqNIucdrY",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-elqNIucdrY",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-elqNIucdrY",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-elqNIucdrY",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-1ro_H1jfr-",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-1ro_H1jfr-",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-1ro_H1jfr-",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-1ro_H1jfr-",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-1ro_H1jfr-",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-p4KJB0J6TY",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-p4KJB0J6TY",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-p4KJB0J6TY",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-p4KJB0J6TY",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-p4KJB0J6TY",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-tOJiVf7V_b",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-tOJiVf7V_b",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-tOJiVf7V_b",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-tOJiVf7V_b",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-tOJiVf7V_b",
+        "course_base_id": "i-m4uEhiIL-f",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-lY6rG_J0WU",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-lY6rG_J0WU",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-lY6rG_J0WU",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-lY6rG_J0WU",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-lY6rG_J0WU",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-MakbqUGa_q",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-MakbqUGa_q",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-MakbqUGa_q",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-MakbqUGa_q",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-MakbqUGa_q",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-u68wJZrvOh",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-u68wJZrvOh",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-u68wJZrvOh",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-u68wJZrvOh",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-u68wJZrvOh",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-KnwLViUZQc",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-KnwLViUZQc",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-KnwLViUZQc",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-KnwLViUZQc",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-KnwLViUZQc",
+        "course_base_id": "i-goi7k0AsGH",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-kN4Whq_gFD",
+        "course_base_id": "i-zV3gie6I3B",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-kN4Whq_gFD",
+        "course_base_id": "i-zV3gie6I3B",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-kN4Whq_gFD",
+        "course_base_id": "i-zV3gie6I3B",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-kN4Whq_gFD",
+        "course_base_id": "i-zV3gie6I3B",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-kN4Whq_gFD",
+        "course_base_id": "i-zV3gie6I3B",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-709GllEeGf",
+        "course_base_id": "i-zV3gie6I3B",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-709GllEeGf",
+        "course_base_id": "i-zV3gie6I3B",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-709GllEeGf",
+        "course_base_id": "i-zV3gie6I3B",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-709GllEeGf",
+        "course_base_id": "i-zV3gie6I3B",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-709GllEeGf",
+        "course_base_id": "i-zV3gie6I3B",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-9tR_0KKOZC",
+        "course_base_id": "i-x9VVwNTpOl",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-9tR_0KKOZC",
+        "course_base_id": "i-x9VVwNTpOl",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-9tR_0KKOZC",
+        "course_base_id": "i-x9VVwNTpOl",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-9tR_0KKOZC",
+        "course_base_id": "i-x9VVwNTpOl",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-9tR_0KKOZC",
+        "course_base_id": "i-x9VVwNTpOl",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-Nu7VKWUbxH",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-Nu7VKWUbxH",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-Nu7VKWUbxH",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-Nu7VKWUbxH",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-Nu7VKWUbxH",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "A",
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-RcNQuu3lRJ",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-RcNQuu3lRJ",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-RcNQuu3lRJ",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-RcNQuu3lRJ",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-RcNQuu3lRJ",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "A",
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-R-BpDe_IkI",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-R-BpDe_IkI",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-R-BpDe_IkI",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-R-BpDe_IkI",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-R-BpDe_IkI",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "A",
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-iCW3qVt1TG",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-iCW3qVt1TG",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-iCW3qVt1TG",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-s38p6SqZpY",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-iCW3qVt1TG",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-BKbajtfrlD",
+        "letters": [
+          "R"
+        ]
+      },
+      {
+        "pcc_id": "i-iCW3qVt1TG",
+        "course_base_id": "i-stVHWsUqJb",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "A",
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-DOEFquqsxM",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "A",
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-DOEFquqsxM",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-DOEFquqsxM",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-DOEFquqsxM",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-DOEFquqsxM",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-sf5BLPAcnl",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-4MSH5Bo8aN",
+        "letters": [
+          "A",
+          "M"
+        ]
+      },
+      {
+        "pcc_id": "i-sf5BLPAcnl",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-AtlW5iPFg-",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-sf5BLPAcnl",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-s38p6SqZpY",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-sf5BLPAcnl",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-BKbajtfrlD",
+        "letters": []
+      },
+      {
+        "pcc_id": "i-sf5BLPAcnl",
+        "course_base_id": "i-q2kP8lsQww",
+        "po_id": "i-l_Maz_Qi3P",
+        "letters": [
+          "M"
+        ]
+      }
+    ],
+    "comp_cct": []
+  }
+}
