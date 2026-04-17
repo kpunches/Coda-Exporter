@@ -12,7 +12,7 @@
 <body>
   <div id="root"></div>
   <script type="text/babel">
-const { useState, useCallback, useRef } = React;
+const { useState, useCallback, useRef, useEffect } = React;
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 const WGUOwl = () => (
@@ -511,10 +511,11 @@ const css = `
   .hint{font-size:11.5px;color:#374151}
   .opt{font-weight:400;color:#6b7280}
   .irow{display:flex;gap:8px;align-items:center}
-  input[type=text]{width:100%;height:38px;padding:0 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;background:rgba(255,255,255,.92);outline:none;transition:border-color .15s,box-shadow .15s}
-  input[type=text]:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.14)}
+  input[type=text],select{width:100%;height:38px;padding:0 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;color:#0f172a;background:rgba(255,255,255,.92);outline:none;transition:border-color .15s,box-shadow .15s}
+  input[type=text]:focus,select:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.14)}
   input[type=text]::placeholder{color:#cbd5e1}
-  input.ok{border-color:#34d399}
+  input.ok,select.ok{border-color:#34d399}
+  select:disabled{background:#f1f5f9;color:#94a3b8;cursor:not-allowed}
   .pill{display:inline-flex;align-items:center;font-size:11px;font-weight:600;border-radius:20px;padding:3px 10px;white-space:nowrap;letter-spacing:.01em}
   .pill-g{background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border:1px solid #6ee7b7}
   .pill-b{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e3a8a;border:1px solid #93c5fd}
@@ -578,6 +579,34 @@ function App() {
   const [saved,      setSaved]      = useState(false);
   const [debugLog,   setDebugLog]   = useState([]);
   const [showDebug,  setShowDebug]  = useState(false);
+  // Program list (PDOW + future filtered course picker). Loaded once on mount
+  // from /api/programs; the dropdown shows abbreviations (MSCSIA, MSCIN, …)
+  // since those are the canonical user-facing handles internally.
+  const [programs,        setPrograms]        = useState([]);
+  const [programsLoading, setProgramsLoading] = useState(true);
+  const [programsErr,     setProgramsErr]     = useState("");
+  const [programAbbr,     setProgramAbbr]     = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch(`${PROXY_URL}/api/programs`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        if (!cancelled) {
+          setPrograms(data.programs || []);
+          setProgramsLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setProgramsErr(err.message);
+          setProgramsLoading(false);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const effDocId  = docId.trim() || "4YIajnJqvo";
   const cleanCode = code.trim().toUpperCase();
@@ -683,6 +712,26 @@ function App() {
               <span className={`pill ${docCustom?"pill-b":"pill-g"}`}>{docCustom?"Custom":"Default"}</span>
             </div>
             <span className="hint">Leave as-is for Design &amp; Development V3</span>
+          </div>
+        </div>
+
+        {/* Program */}
+        <div className="card">
+          <div className="clabel">Program</div>
+          <div className="field">
+            <label htmlFor="prog">Program</label>
+            <select id="prog"
+              value={programAbbr}
+              disabled={programsLoading || !!programsErr}
+              onChange={e => { setProgramAbbr(e.target.value); clearStatus(); }}
+              className={programAbbr ? "ok" : ""}>
+              <option value="">{programsLoading ? "Loading programs…" : programsErr ? "Failed to load" : "— Select —"}</option>
+              {programs.map(p => (
+                <option key={p.abbr} value={p.abbr}>{p.abbr} — {p.name}</option>
+              ))}
+            </select>
+            {programsErr && <span className="hint" style={{color:"#b91c1c"}}>Couldn't fetch programs: {programsErr}</span>}
+            {!programsErr && <span className="hint">Used by PDOW exports; will filter the course list once that's wired up.</span>}
           </div>
         </div>
 

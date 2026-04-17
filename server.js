@@ -385,12 +385,13 @@ app.post("/api/course", async (req, res) => {
 });
 
 // ─── Programs (PDOW) ─────────────────────────────────────────────────────────
-// Diagnostic endpoint — returns the full _Programs table so the frontend can
-// see what columns exist and identify which one holds the abbreviation
-// (MSCSIA, MSCIN, etc.). Once we lock the abbreviation column ID into the
-// PROGRAMS_TABLE schema below, this endpoint can be slimmed to {id, name, abbr}.
+// Returns the program list for the dropdown. Each program: {rowId, abbr, name}.
+// abbr (MSCSIA, MSCIN, etc.) is the canonical key used by the four junction
+// tables and by every other PDOW endpoint, so the frontend keys its state on
+// it rather than rowId.
 
 const PROGRAMS_TABLE = "grid-_cLrawcUzd";
+const PROGRAMS_ABBR  = "c-WKn3oxZN4y"; // "Program Abbreviation" — plain text
 
 app.get("/api/programs", async (req, res) => {
   const t0 = Date.now();
@@ -405,13 +406,21 @@ app.get("/api/programs", async (req, res) => {
       rowLimit: 200,
     });
 
-    const rows = (result.rows || []).map(r => ({
-      rowId: r.id || r.rowId,
-      values: r.values || {},
-    }));
+    const programs = (result.rows || [])
+      .map(r => {
+        const v = r.values || {};
+        return {
+          rowId: r.id || r.rowId,
+          abbr:  asString(v[PROGRAMS_ABBR]).trim(),
+          name:  asString(v["c-L3c8jGheXt"]).trim()        // PROGRAMS_DISPLAY ("M.S. ...")
+                 || asString(v["c-JbFOWBC9i0"]).trim(),    // PROGRAMS_NAME_TEXT (fallback)
+        };
+      })
+      .filter(p => p.abbr)                                  // drop rows without an abbreviation
+      .sort((a, b) => a.abbr.localeCompare(b.abbr));        // dropdown order
 
-    console.log(`  done ${Date.now() - t0}ms — ${rows.length} programs`);
-    res.json({ rows });
+    console.log(`  done ${Date.now() - t0}ms — ${programs.length} programs`);
+    res.json({ programs });
   } catch (err) {
     console.error(`  ERROR: ${err.message}`);
     res.status(500).json({ error: err.message });
