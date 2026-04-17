@@ -66,8 +66,8 @@ const InfoIcon = () => (
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DOC_TYPES = [
   { id: "CCW",  name: "CCW",  full: "Course Competency Worksheet", available: true  },
-  { id: "SSD",  name: "SSD",  full: "Scope & Sequence Doc",        available: false },
-  { id: "CSBD", name: "CSBD", full: "Course Summary / Brief",      available: false },
+  { id: "PDOW", name: "PDOW", full: "PD Outputs Workbook",         available: true  },
+  { id: "SOON", name: "SSD / CSBD", full: "exports coming soon!",  available: false },
 ];
 
 const STEPS = [
@@ -663,8 +663,21 @@ function App() {
   const cleanCode = selectedCourse?.code || "";
   const cleanName = selectedCourse?.name || "";
   const primary   = cleanCode;
-  const hasInput  = !!selectedCourse;
-  const fname     = (primary || "COURSE") + "_" + docType + ".docx";
+
+  // Validation depends on the selected doc type:
+  //   CCW   → a course must be picked (program is implied by the dropdown chain)
+  //   PDOW  → a program must be picked (no course — it's a program-level export)
+  //   SOON  → never valid (card is disabled anyway)
+  const isCCW  = docType === "CCW";
+  const isPDOW = docType === "PDOW";
+  const hasInput = isCCW ? !!selectedCourse : isPDOW ? !!programAbbr : false;
+  const selectedProgram = programs.find(p => p.abbr === programAbbr);
+
+  // Output filename follows the export path: CCW builds a DOCX keyed by
+  // course code; PDOW builds a Program Map xlsx keyed by program abbreviation.
+  const fname = isPDOW
+    ? `${programAbbr || "PROGRAM"}_Program_Map.xlsx`
+    : `${primary || "COURSE"}_${docType}.docx`;
 
   const showConfirm = hasInput && phase === "idle";
   const canExport   = hasInput && phase !== "running";
@@ -695,6 +708,13 @@ function App() {
     setPhase("running");
 
     try {
+      // PDOW path: reserved for the next commit. Surfacing a clear error
+      // here is intentional — the dropdown wiring + validation should still
+      // be testable in the deployed UI even before data fetching lands.
+      if (docType === "PDOW") {
+        throw new Error("PDOW export isn't wired up yet — landing in the next deploy.");
+      }
+
       setStepIdx(0); // Connecting to Coda
       await sleep(150);
 
@@ -734,10 +754,13 @@ function App() {
     setSaved(true);
   }
 
+  const docTypeFull = DOC_TYPES.find(d => d.id === docType)?.full || docType;
   const confirmRows = showConfirm ? [
-    ["Doc",    `Design & Development V3 (${effDocId})`],
-    ["Course", cleanCode+(cleanName?` – ${cleanName.length>50?cleanName.slice(0,50)+"…":cleanName}`:"")],
-    ["Type",   `${docType} (Course Competency Worksheet)`],
+    ["Doc",  `Design & Development V3 (${effDocId})`],
+    isPDOW
+      ? ["Program", selectedProgram ? `${selectedProgram.abbr} — ${selectedProgram.name}` : programAbbr]
+      : ["Course",  cleanCode + (cleanName ? ` – ${cleanName.length>50 ? cleanName.slice(0,50)+"…" : cleanName}` : "")],
+    ["Type",   `${docType} (${docTypeFull})`],
     ["Output", fname],
   ] : null;
 
