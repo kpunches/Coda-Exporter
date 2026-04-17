@@ -261,6 +261,10 @@ def _strip_stale_vml_comments(output_path: Path):
       - comments*.xml files (we don't emit cell comments)
       - All rels entries and Content-Types overrides referencing the above
       - <legacyDrawing .../> elements in sheet XMLs
+      - Overlapping <col> ranges inside <cols> blocks (later-defined columns
+        win, matching openpyxl's set-by-index semantics)
+      - Orphan <sheetView workbookViewId="N"> elements whose N is higher than
+        the number of <workbookView> entries we emitted in workbook.xml
     """
     import zipfile
     import shutil
@@ -275,6 +279,16 @@ def _strip_stale_vml_comments(output_path: Path):
 
     def is_comments(path: str) -> bool:
         return bool(re.search(r"/comments/comment\d+\.xml$|/comments\d+\.xml$", path))
+
+    # First pass: peek at workbook.xml to see how many <workbookView>s remain.
+    # Sheet-level <sheetView workbookViewId="N"> entries past that count are
+    # orphans from the template's multi-view setup and make Excel repair.
+    with zipfile.ZipFile(src, "r") as zin:
+        try:
+            wb_text = zin.read("xl/workbook.xml").decode()
+            num_views = max(1, len(re.findall(r"<workbookView\b", wb_text)))
+        except KeyError:
+            num_views = 1
 
     with zipfile.ZipFile(src, "r") as zin, zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
         for item in zin.namelist():
@@ -313,11 +327,123 @@ def _strip_stale_vml_comments(output_path: Path):
                 text = data.decode()
                 # Remove <legacyDrawing .../> — references the VML we removed
                 text = re.sub(r'<legacyDrawing\b[^>]*/>', "", text)
+                text = _dedupe_cols_block(text)
+                text = _drop_orphan_sheet_views(text, num_views)
                 data = text.encode()
 
             zout.writestr(item, data)
 
     shutil.move(str(tmp), str(src))
+
+
+def _dedupe_cols_block(sheet_xml: str) -> str:
+    """
+    Rewrite the <cols>...</cols> block so no two <col> entries overlap a
+    column index. Later entries win for any overlapping range — this matches
+    openpyxl's semantics where a per-index `column_dimensions[letter]` set
+    overrides a template-wide min/max range.
+
+    Input example (overlap on col 16):
+        <cols>
+          <col min="15" max="16" width="22" customWidth="1"/>
+          <col min="16" max="16" width="22" customWidth="1"/>
+        </cols>
+
+    Output:
+        <cols>
+          <col min="15" max="15" width="22" customWidth="1"/>
+          <col min="16" max="16" width="22" customWidth="1"/>
+        </cols>
+
+    Adjacent columns with identical attributes are merged back into a single
+    range for compactness.
+    """
+    import re
+
+    m = re.search(r"(<cols>)(.*?)(</cols>)", sheet_xml, re.DOTALL)
+    if not m:
+        return sheet_xml
+
+    open_tag, body, close_tag = m.group(1), m.group(2), m.group(3)
+    col_tags = re.findall(r"<col\b[^/]*/>", body)
+    if not col_tags:
+        return sheet_xml
+
+    per_col: dict[int, str] = {}
+    for tag in col_tags:
+        mn_m = re.search(r'\bmin="(\d+)"', tag)
+        mx_m = re.search(r'\bmax="(\d+)"', tag)
+        if not mn_m or not mx_m:
+            continue
+        mn, mx = int(mn_m.group(1)), int(mx_m.group(1))
+        # Strip min/max so we can re-emit per-col ranges cleanly
+        stripped = re.sub(r'\s*\bmin="\d+"', "", tag)
+        stripped = re.sub(r'\s*\bmax="\d+"', "", stripped)
+        for i in range(mn, mx + 1):
+            per_col[i] = stripped  # later occurrence wins
+
+    if not per_col:
+        return sheet_xml
+
+    # Re-emit sorted, merging adjacent cols with identical stripped attrs
+    indices = sorted(per_col.keys())
+    merged_tags: list[str] = []
+    i = 0
+    while i < len(indices):
+        start = indices[i]
+        attrs = per_col[start]
+        j = i
+        while (
+            j + 1 < len(indices)
+            and indices[j + 1] == indices[j] + 1
+            and per_col[indices[j + 1]] == attrs
+        ):
+            j += 1
+        end = indices[j]
+        merged_tags.append(
+            re.sub(r"<col\b", f'<col min="{start}" max="{end}"', attrs, count=1)
+        )
+        i = j + 1
+
+    new_body = "".join(merged_tags)
+    return sheet_xml[: m.start()] + open_tag + new_body + close_tag + sheet_xml[m.end():]
+
+
+def _drop_orphan_sheet_views(sheet_xml: str, num_workbook_views: int) -> str:
+    """
+    Remove <sheetView workbookViewId="N"> entries whose N is >= the number of
+    <workbookView>s in workbook.xml. The BSSCOM template carries two sheet
+    views per sheet (one per workbookView in its bookViews). After we collapse
+    bookViews to a single clean view, the viewId=1 sheetViews become orphan
+    references and Excel flags the file as damaged.
+    """
+    import re
+
+    m = re.search(r"(<sheetViews>)(.*?)(</sheetViews>)", sheet_xml, re.DOTALL)
+    if not m:
+        return sheet_xml
+
+    open_tag, body, close_tag = m.group(1), m.group(2), m.group(3)
+    # Split into individual <sheetView ... /> or <sheetView ...>...</sheetView>
+    sv_pattern = re.compile(
+        r"<sheetView\b[^>]*(?:/>|>.*?</sheetView>)", re.DOTALL
+    )
+    views = sv_pattern.findall(body)
+    if not views:
+        return sheet_xml
+
+    kept: list[str] = []
+    for sv in views:
+        id_m = re.search(r'\bworkbookViewId="(\d+)"', sv)
+        if id_m and int(id_m.group(1)) >= num_workbook_views:
+            continue
+        kept.append(sv)
+
+    if not kept:
+        kept = ['<sheetView workbookViewId="0"/>']
+
+    new_body = "".join(kept)
+    return sheet_xml[: m.start()] + open_tag + new_body + close_tag + sheet_xml[m.end():]
 
 
 # ============================================================
@@ -424,6 +550,14 @@ def _reset_sheet(ws: Worksheet):
     ws._images = []
     if hasattr(ws, "data_validations") and ws.data_validations is not None:
         ws.data_validations.dataValidation = []
+
+    # Clear inherited column dimensions. The BSSCOM template has ColumnDimension
+    # entries with spans like min=15 max=16 that openpyxl keeps alongside the
+    # new per-column widths we set below. The result is two <col> elements
+    # covering the same column index, which Excel flags as "Workbook Repaired"
+    # and refuses to render properly.
+    for key in list(ws.column_dimensions.keys()):
+        del ws.column_dimensions[key]
 
     # Clear conditional formatting rules inherited from the template — these
     # can override our row fills on columns like Scope/Ownership/Designation.
