@@ -336,6 +336,19 @@ def _reset_workbook_view(wb, active_tab_index: int = 0):
     )
     wb.views = [view]
 
+    # Each sheetView.workbookViewId must reference a real entry in wb.views.
+    # The template ships some passthrough tabs (Program Map Instructions,
+    # Menus) with a second sheetView at workbookViewId=1; once we collapse to
+    # a single bookView that reference is dangling, and Excel reports
+    # "Workbook Repaired" on open. Keep only sheetViews whose id is in range.
+    valid_ids = set(range(len(wb.views)))
+    for ws in wb.worksheets:
+        sheet_views = getattr(getattr(ws, "views", None), "sheetView", None)
+        if not sheet_views:
+            continue
+        kept = [sv for sv in sheet_views if sv.workbookViewId in valid_ids]
+        ws.views.sheetView = kept or sheet_views[:1]
+
 
 def _reorder_tabs(wb, desired_order: list):
     """
