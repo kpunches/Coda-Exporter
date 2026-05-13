@@ -135,6 +135,13 @@ BANNER_CCT = (
 KEEP_TABS = {"Course Alignment", "Program Map", "Program Map Instructions", "Standard Path"}
 
 
+# ------------- Comps/Skills column-band palette -------------
+# Subtle, light tints so the user can see column-zone grouping at a glance.
+CS_COURSE_FILL = PatternFill("solid", start_color="FFF4D6", end_color="FFF4D6")  # pale gold
+CS_COMP_FILL   = PatternFill("solid", start_color="E5EEF8", end_color="E5EEF8")  # pale blue
+CS_SKILL_FILL  = PatternFill("solid", start_color="E5F1E2", end_color="E5F1E2")  # pale green
+
+
 def write_program_map(
     model: dict,
     template_path: str | Path,
@@ -183,14 +190,20 @@ def write_program_map(
     #    BSSCOM-specific course data that we need to replace).
     _build_standard_path_tab(wb, model, label, owl_image_path)
 
-    # 6. Set final tab order:
+    # 6. Build Comps→Skills and Skills→Comps tabs
+    _build_comps_to_skills_tab(wb, model, label, owl_image_path)
+    _build_skills_to_comps_tab(wb, model, label, owl_image_path)
+
+    # 7. Set final tab order:
     #    Standard Path (0) | Program Map Instructions (1) | Program Map (2) |
-    #    Course Alignment (3) | Menus (hidden, 4)
+    #    Course Alignment (3) | Comps to Skills (4) | Skills to Comps (5) | Menus (hidden)
     _reorder_tabs(wb, [
         "Standard Path",
         "Program Map Instructions",
         "Program Map",
         "Course Alignment",
+        "Comps to Skills",
+        "Skills to Comps",
         "Menus",
     ])
 
@@ -1159,6 +1172,381 @@ def _course_description_summary(course: dict, max_chars: int = 450) -> str:
     if last_space > max_chars * 0.5:
         return text[:last_space].rstrip() + " …"
     return window.rstrip() + " …"
+
+
+# ============================================================
+# Comps → Skills tab
+# ============================================================
+# Layout:
+#   Row 1: navy banner + owl + title
+#   Row 2: light-blue column headers:
+#          A Course #, B Course Title, C Comp Title, D Comp Statement,
+#          E Skill URL, F Skill Category, G Skill Title, H Skill Statement
+#   Row 3+: One row per (course × comp × skill). Course cells merged across
+#           the course's rows, Comp cells merged across that comp's skill rows.
+#           Column-zone fills: A-B gold (course), C-D blue (comp), E-H green (skill).
+#           Medium-dark border between course groups.
+# Freeze: C3 (rows 1-2 + cols A-B locked).
+
+CTS_TAB_NAME = "Comps to Skills"
+CTS_LAST_COL = 8
+CTS_COL_COURSE_CODE  = 1
+CTS_COL_COURSE_NAME  = 2
+CTS_COL_COMP_TITLE   = 3
+CTS_COL_COMP_STMT    = 4
+CTS_COL_SKILL_URL    = 5
+CTS_COL_SKILL_CAT    = 6
+CTS_COL_SKILL_TITLE  = 7
+CTS_COL_SKILL_STMT   = 8
+
+
+def _build_comps_to_skills_tab(wb, model: dict, program_label: str,
+                                 owl_image_path: Path) -> Worksheet:
+    if CTS_TAB_NAME in wb.sheetnames:
+        del wb[CTS_TAB_NAME]
+    ws = wb.create_sheet(CTS_TAB_NAME)
+
+    courses = model["courses"]
+
+    widths = {
+        CTS_COL_COURSE_CODE: 12,
+        CTS_COL_COURSE_NAME: 32,
+        CTS_COL_COMP_TITLE:  32,
+        CTS_COL_COMP_STMT:   46,
+        CTS_COL_SKILL_URL:   30,
+        CTS_COL_SKILL_CAT:   22,
+        CTS_COL_SKILL_TITLE: 32,
+        CTS_COL_SKILL_STMT:  52,
+    }
+    for col, w in widths.items():
+        ws.column_dimensions[get_column_letter(col)].width = w
+
+    # Row 1: banner
+    ws.row_dimensions[1].height = 70
+    for c in range(1, CTS_LAST_COL + 1):
+        cell = ws.cell(row=1, column=c)
+        cell.fill = BANNER_FILL
+        cell.font = BANNER_FONT
+        cell.alignment = CENTER
+        existing = cell.border
+        cell.border = Border(
+            left=existing.left, right=existing.right,
+            top=existing.top, bottom=_bottom_banner,
+        )
+    ws.cell(row=1, column=CTS_COL_COURSE_NAME).value = (
+        f"{program_label} Competencies → Skills    "
+        f"Each row maps a single skill to its competency and course."
+    )
+    ws.merge_cells(
+        start_row=1, start_column=CTS_COL_COURSE_NAME,
+        end_row=1, end_column=CTS_LAST_COL,
+    )
+    _place_owl(ws, owl_image_path, col_width_chars=widths[CTS_COL_COURSE_CODE])
+
+    # Row 2: column headers
+    ws.row_dimensions[2].height = 38
+    headers = {
+        CTS_COL_COURSE_CODE: "Course #",
+        CTS_COL_COURSE_NAME: "Course Title",
+        CTS_COL_COMP_TITLE:  "Competency Title",
+        CTS_COL_COMP_STMT:   "Competency Statement",
+        CTS_COL_SKILL_URL:   "Canonical Skill URL",
+        CTS_COL_SKILL_CAT:   "Skill Category",
+        CTS_COL_SKILL_TITLE: "Skill Title",
+        CTS_COL_SKILL_STMT:  "Skill Statement",
+    }
+    for c in range(1, CTS_LAST_COL + 1):
+        cell = ws.cell(row=2, column=c)
+        cell.fill = HEADER_FILL
+        cell.font = HEADER_FONT
+        cell.alignment = CENTER
+        cell.border = BODY_BORDER
+    for col, label in headers.items():
+        ws.cell(row=2, column=col).value = label
+
+    # Row 3+: data
+    course_zone = (CTS_COL_COURSE_CODE, CTS_COL_COURSE_NAME)
+    comp_zone   = (CTS_COL_COMP_TITLE, CTS_COL_COMP_STMT)
+    skill_zone  = (CTS_COL_SKILL_URL, CTS_COL_SKILL_STMT)
+
+    row = 3
+    course_boundaries = []  # row numbers where a course starts (for thick border)
+    for course in courses:
+        course_first_row = row
+        # Sort comps by comp_order then iterate; skip comps with zero skills emit one row anyway
+        comps = sorted(course.get("competencies", []),
+                       key=lambda c: c.get("comp_order", 0))
+        for comp in comps:
+            comp_first_row = row
+            skills = comp.get("skills") or []
+            if not skills:
+                # Emit one row with comp data and blank skill cells
+                _write_cts_row(ws, row, course, comp, None)
+                row += 1
+            else:
+                # Already sorted by category, title in build_mscin_model
+                for skill in skills:
+                    _write_cts_row(ws, row, course, comp, skill)
+                    row += 1
+            comp_last_row = row - 1
+            # Merge Comp Title / Statement vertically across this comp's rows
+            if comp_last_row > comp_first_row:
+                for col in range(comp_zone[0], comp_zone[1] + 1):
+                    ws.merge_cells(start_row=comp_first_row, start_column=col,
+                                    end_row=comp_last_row, end_column=col)
+
+        course_last_row = row - 1
+        # Merge Course #/Title vertically across this course's rows
+        if course_last_row > course_first_row:
+            for col in range(course_zone[0], course_zone[1] + 1):
+                ws.merge_cells(start_row=course_first_row, start_column=col,
+                                end_row=course_last_row, end_column=col)
+        course_boundaries.append((course_first_row, course_last_row))
+
+    # Thick dark-gray border between course groups (bottom of last row of each course)
+    for first, last in course_boundaries:
+        for col in range(1, CTS_LAST_COL + 1):
+            cell = ws.cell(row=last, column=col)
+            existing = cell.border
+            cell.border = Border(
+                left=existing.left, right=existing.right,
+                top=existing.top, bottom=_thick_dark,
+            )
+
+    ws.freeze_panes = "C3"
+    return ws
+
+
+def _write_cts_row(ws: Worksheet, row: int, course: dict, comp: dict, skill: dict | None):
+    """One row on the Comps→Skills tab. Skill may be None for comps with no mapped skills."""
+    # Estimate row height: skill statement and comp statement are the longest fields
+    stmt = (skill or {}).get("statement", "") or ""
+    comp_stmt = comp.get("statement", "") or ""
+    longest = max(len(stmt), len(comp_stmt), 1)
+    lines = max(2, (longest + 51) // 52)
+    ws.row_dimensions[row].height = max(MIN_ROW_HEIGHT_DOUBLE, 13 * lines + 10)
+
+    values_and_fills = [
+        (CTS_COL_COURSE_CODE,  course.get("code", "") or "",        CS_COURSE_FILL, CENTER),
+        (CTS_COL_COURSE_NAME,  course.get("name", "") or "",        CS_COURSE_FILL, LEFT_PADDED),
+        (CTS_COL_COMP_TITLE,   comp.get("title", "") or "",         CS_COMP_FILL,   LEFT_PADDED),
+        (CTS_COL_COMP_STMT,    comp.get("statement", "") or "",     CS_COMP_FILL,   LEFT_PADDED),
+        (CTS_COL_SKILL_URL,    (skill or {}).get("url", "") or "",  CS_SKILL_FILL,  LEFT_PADDED),
+        (CTS_COL_SKILL_CAT,    (skill or {}).get("category", "") or "", CS_SKILL_FILL, CENTER),
+        (CTS_COL_SKILL_TITLE,  (skill or {}).get("title", "") or "",    CS_SKILL_FILL, LEFT_PADDED),
+        (CTS_COL_SKILL_STMT,   (skill or {}).get("statement", "") or "", CS_SKILL_FILL, LEFT_PADDED),
+    ]
+    for col, value, fill, align in values_and_fills:
+        cell = ws.cell(row=row, column=col)
+        cell.value = value if value != "" else None
+        cell.fill = fill
+        cell.font = Font(size=10, name="Arial")
+        cell.alignment = align
+        cell.border = BODY_BORDER
+
+
+# ============================================================
+# Skills → Comps tab
+# ============================================================
+# Layout:
+#   A Course #, B Course Title, C Skill URL, D Skill Category, E Skill Title,
+#   F Skill Statement, G Comp Title, H Comp Statement
+# Within each course, group by skill (category → title), then list comps under
+# each skill. Course cells merge across course's rows; Skill cells (C-F) merge
+# across that skill's comp rows. Column fills: A-B gold, C-F green, G-H blue.
+# Freeze: C3 (rows 1-2 + cols A-B locked).
+
+STC_TAB_NAME = "Skills to Comps"
+STC_LAST_COL = 8
+STC_COL_COURSE_CODE  = 1
+STC_COL_COURSE_NAME  = 2
+STC_COL_SKILL_URL    = 3
+STC_COL_SKILL_CAT    = 4
+STC_COL_SKILL_TITLE  = 5
+STC_COL_SKILL_STMT   = 6
+STC_COL_COMP_TITLE   = 7
+STC_COL_COMP_STMT    = 8
+
+
+def _build_skills_to_comps_tab(wb, model: dict, program_label: str,
+                                 owl_image_path: Path) -> Worksheet:
+    if STC_TAB_NAME in wb.sheetnames:
+        del wb[STC_TAB_NAME]
+    ws = wb.create_sheet(STC_TAB_NAME)
+
+    courses = model["courses"]
+
+    widths = {
+        STC_COL_COURSE_CODE: 12,
+        STC_COL_COURSE_NAME: 32,
+        STC_COL_SKILL_URL:   30,
+        STC_COL_SKILL_CAT:   22,
+        STC_COL_SKILL_TITLE: 32,
+        STC_COL_SKILL_STMT:  52,
+        STC_COL_COMP_TITLE:  32,
+        STC_COL_COMP_STMT:   46,
+    }
+    for col, w in widths.items():
+        ws.column_dimensions[get_column_letter(col)].width = w
+
+    # Row 1: banner
+    ws.row_dimensions[1].height = 70
+    for c in range(1, STC_LAST_COL + 1):
+        cell = ws.cell(row=1, column=c)
+        cell.fill = BANNER_FILL
+        cell.font = BANNER_FONT
+        cell.alignment = CENTER
+        existing = cell.border
+        cell.border = Border(
+            left=existing.left, right=existing.right,
+            top=existing.top, bottom=_bottom_banner,
+        )
+    ws.cell(row=1, column=STC_COL_COURSE_NAME).value = (
+        f"{program_label} Skills → Competencies    "
+        f"Within each course, skills are grouped by category, "
+        f"showing the competencies they map to."
+    )
+    ws.merge_cells(
+        start_row=1, start_column=STC_COL_COURSE_NAME,
+        end_row=1, end_column=STC_LAST_COL,
+    )
+    _place_owl(ws, owl_image_path, col_width_chars=widths[STC_COL_COURSE_CODE])
+
+    # Row 2: column headers
+    ws.row_dimensions[2].height = 38
+    headers = {
+        STC_COL_COURSE_CODE: "Course #",
+        STC_COL_COURSE_NAME: "Course Title",
+        STC_COL_SKILL_URL:   "Canonical Skill URL",
+        STC_COL_SKILL_CAT:   "Skill Category",
+        STC_COL_SKILL_TITLE: "Skill Title",
+        STC_COL_SKILL_STMT:  "Skill Statement",
+        STC_COL_COMP_TITLE:  "Competency Title",
+        STC_COL_COMP_STMT:   "Competency Statement",
+    }
+    for c in range(1, STC_LAST_COL + 1):
+        cell = ws.cell(row=2, column=c)
+        cell.fill = HEADER_FILL
+        cell.font = HEADER_FONT
+        cell.alignment = CENTER
+        cell.border = BODY_BORDER
+    for col, label in headers.items():
+        ws.cell(row=2, column=col).value = label
+
+    # Row 3+: data
+    course_zone = (STC_COL_COURSE_CODE, STC_COL_COURSE_NAME)
+    skill_zone  = (STC_COL_SKILL_URL, STC_COL_SKILL_STMT)
+
+    row = 3
+    course_boundaries = []
+    for course in courses:
+        course_first_row = row
+        # Build a map: skill_id -> (skill_obj, [comps that map to it])
+        # Preserve comp order via the comp_order field on each comp.
+        comps = sorted(course.get("competencies", []),
+                       key=lambda c: c.get("comp_order", 0))
+        skill_to_comps: dict[str, tuple[dict, list[dict]]] = {}
+        for comp in comps:
+            for sk in comp.get("skills") or []:
+                key = sk["id"]
+                if key not in skill_to_comps:
+                    skill_to_comps[key] = (sk, [])
+                skill_to_comps[key][1].append(comp)
+
+        if not skill_to_comps:
+            # No skills mapped at all in this course — emit a single sparse row
+            _write_stc_row(ws, row, course, None, None)
+            row += 1
+        else:
+            # Sort skills within course: by category, then title
+            ordered_skills = sorted(
+                skill_to_comps.values(),
+                key=lambda sc: (sc[0]["category"].lower(), sc[0]["title"].lower()),
+            )
+            for skill, comp_list in ordered_skills:
+                skill_first_row = row
+                # comps already in comp_order from `comps` above; preserve that order
+                for comp in comp_list:
+                    _write_stc_row(ws, row, course, skill, comp)
+                    row += 1
+                skill_last_row = row - 1
+                if skill_last_row > skill_first_row:
+                    for col in range(skill_zone[0], skill_zone[1] + 1):
+                        ws.merge_cells(start_row=skill_first_row, start_column=col,
+                                        end_row=skill_last_row, end_column=col)
+
+        course_last_row = row - 1
+        if course_last_row > course_first_row:
+            for col in range(course_zone[0], course_zone[1] + 1):
+                ws.merge_cells(start_row=course_first_row, start_column=col,
+                                end_row=course_last_row, end_column=col)
+        course_boundaries.append((course_first_row, course_last_row))
+
+    for first, last in course_boundaries:
+        for col in range(1, STC_LAST_COL + 1):
+            cell = ws.cell(row=last, column=col)
+            existing = cell.border
+            cell.border = Border(
+                left=existing.left, right=existing.right,
+                top=existing.top, bottom=_thick_dark,
+            )
+
+    ws.freeze_panes = "C3"
+    return ws
+
+
+def _write_stc_row(ws: Worksheet, row: int, course: dict, skill: dict | None, comp: dict | None):
+    """One row on the Skills→Comps tab."""
+    stmt = (skill or {}).get("statement", "") or ""
+    comp_stmt = (comp or {}).get("statement", "") or ""
+    longest = max(len(stmt), len(comp_stmt), 1)
+    lines = max(2, (longest + 51) // 52)
+    ws.row_dimensions[row].height = max(MIN_ROW_HEIGHT_DOUBLE, 13 * lines + 10)
+
+    values_and_fills = [
+        (STC_COL_COURSE_CODE,  course.get("code", "") or "",        CS_COURSE_FILL, CENTER),
+        (STC_COL_COURSE_NAME,  course.get("name", "") or "",        CS_COURSE_FILL, LEFT_PADDED),
+        (STC_COL_SKILL_URL,    (skill or {}).get("url", "") or "",  CS_SKILL_FILL,  LEFT_PADDED),
+        (STC_COL_SKILL_CAT,    (skill or {}).get("category", "") or "", CS_SKILL_FILL, CENTER),
+        (STC_COL_SKILL_TITLE,  (skill or {}).get("title", "") or "",    CS_SKILL_FILL, LEFT_PADDED),
+        (STC_COL_SKILL_STMT,   (skill or {}).get("statement", "") or "", CS_SKILL_FILL, LEFT_PADDED),
+        (STC_COL_COMP_TITLE,   (comp or {}).get("title", "") or "",  CS_COMP_FILL, LEFT_PADDED),
+        (STC_COL_COMP_STMT,    (comp or {}).get("statement", "") or "", CS_COMP_FILL, LEFT_PADDED),
+    ]
+    for col, value, fill, align in values_and_fills:
+        cell = ws.cell(row=row, column=col)
+        cell.value = value if value != "" else None
+        cell.fill = fill
+        cell.font = Font(size=10, name="Arial")
+        cell.alignment = align
+        cell.border = BODY_BORDER
+
+
+# ============================================================
+# Shared owl placement helper
+# ============================================================
+def _place_owl(ws: Worksheet, owl_image_path: Path, col_width_chars: float = 12):
+    """Anchor the owl image to A1, centered within the cell."""
+    if not owl_image_path.exists():
+        return
+    from openpyxl.drawing.spreadsheet_drawing import OneCellAnchor, AnchorMarker
+    from openpyxl.drawing.xdr import XDRPositiveSize2D
+    from openpyxl.utils.units import pixels_to_EMU
+
+    img = OpenpyxlImage(str(owl_image_path))
+    target = 60
+    img.width = target
+    img.height = target
+
+    col_a_px = int(col_width_chars * 7)
+    row_h_px = 93
+    x = max(0, (col_a_px - target) // 2)
+    y = (row_h_px - target) // 2
+    marker = AnchorMarker(col=0, colOff=pixels_to_EMU(x),
+                          row=0, rowOff=pixels_to_EMU(y))
+    ext = XDRPositiveSize2D(cx=pixels_to_EMU(target), cy=pixels_to_EMU(target))
+    img.anchor = OneCellAnchor(_from=marker, ext=ext)
+    ws.add_image(img)
 
 
 # ============================================================

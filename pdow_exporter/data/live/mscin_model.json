@@ -1,0 +1,1377 @@
+{
+  "program": {
+    "id": "i-ws6bn0g4BY",
+    "name": "M.S. Curriculum and Instruction"
+  },
+  "program_outcomes": [
+    {
+      "id": "i-9Me4zgDN0w",
+      "name": "Curriculum Creation, Evaluation, and Implementation",
+      "description": "The learner evaluates and implements curriculum that aligns with standards, instructional goals, and student needs to support effective teaching and learning across educational settings."
+    },
+    {
+      "id": "i-8DvdCQVskp",
+      "name": "Assessment for Learning and Student Learning Data",
+      "description": "The learner applies valid and reliable assessment practices and data analysis to improve instruction, support student achievement, and communicate assessment data to teachers, school leaders, district administrators, stakeholders, and parents."
+    },
+    {
+      "id": "i-h0bUk6iSUF",
+      "name": "Evidence-Based Instructional Practices",
+      "description": "The learner applies valid and reliable assessment practices and data analysis to improve instruction, support student achievement, and communicate assessment data to teachers, school leaders, district administrators, stakeholders, and parents."
+    },
+    {
+      "id": "i-dwHp3c0lb0",
+      "name": "Cultural Competence",
+      "description": "The learner applies valid and reliable assessment practices and data analysis to improve instruction, support student achievement, and communicate assessment data to teachers, school leaders, district administrators, stakeholders, and parents."
+    },
+    {
+      "id": "i-jSngIIZ9ua",
+      "name": "Instructional Leadership and Collaboration",
+      "description": "The learner applies principles of instructional leadership and collaboration with educators, stakeholders, and instructional teams to design and implement curriculum, assessment, and instruction to improve student achievement."
+    },
+    {
+      "id": "i-i1x7EGPutE",
+      "name": "Foundations of Educational Research",
+      "description": "The learner applies educational research and data analysis methods to evaluate curriculum, assessment, and instruction."
+    },
+    {
+      "id": "i-7q070Z48A1",
+      "name": "Educational Technology Tools and Principles",
+      "description": "The learner selects, evaluates, and integrates educational technology tools and emerging digital resources to enhance engagement, accessibility, assessment, and instruction for all learners."
+    }
+  ],
+  "ccts": [
+    {
+      "id": "i-F2a6ndtQea",
+      "name": "Emerging Technology in the Classroom",
+      "description": ""
+    },
+    {
+      "id": "i-Xr23-GT75q",
+      "name": "Administration and Leadership",
+      "description": ""
+    },
+    {
+      "id": "i-nc4961N2Au",
+      "name": "Feedback and Improvement",
+      "description": ""
+    },
+    {
+      "id": "i-mG4KstVtjP",
+      "name": "Data-Driven Decision Making",
+      "description": ""
+    }
+  ],
+  "courses": [
+    {
+      "prog_course_id": "i-GXgmh00DXK",
+      "course_base_id": "i-x-bbmvl1E4",
+      "code": "EXXX",
+      "name": "Human Development and Learning Science",
+      "display_name": "EXXX: Human Development and Learning Science",
+      "term": "1",
+      "std_path_order": 1,
+      "cu": 3,
+      "scope": "New",
+      "ownership": "WSE",
+      "designation": "",
+      "certificate": "",
+      "scope_notes": "This course gives a survey-level focus on how educators create supportive learning environments by modeling skills through intentional design and evaluation. It emphasizes the application of evidence-based strategies to motivate students, including careful vetting of instructional technologies. This course also explores developmental strategies that support students\u2019 social-emotional growth, while connecting theories of learning and human development to modern classroom practice, including key principles from the Science of Reading.",
+      "description": "",
+      "po_alignments": {
+        "i-h0bUk6iSUF": "I"
+      },
+      "cct_alignments": {},
+      "competencies": [
+        {
+          "pcc_id": "i-yJnzKXcPgw",
+          "prog_course_id": "i-GXgmh00DXK",
+          "title": "Explains Foundational Educational Theories",
+          "statement": "The learner explains foundational educational theories and their historical significance in the classroom.",
+          "level": 2,
+          "assessment": "OA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "I",
+            "i-h0bUk6iSUF": "I",
+            "i-dwHp3c0lb0": "I",
+            "i-i1x7EGPutE": "I"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-BCe3qQ4BAK",
+              "category": "Instructional Design",
+              "title": "Educational Theory Impact Description",
+              "statement": "Describe how educational theory impacts student learning.",
+              "url": "https://osmt.wgu.edu/api/skills/fe44e905-a141-4ba1-9d9b-0cd2efa0e60f"
+            },
+            {
+              "id": "i-vyYQVsD-8z",
+              "category": "Instructional Design",
+              "title": "Learning Experience Design",
+              "statement": "Apply learning theories to the design of learning experiences.",
+              "url": "https://osmt.wgu.edu/api/skills/01d91789-181f-4d7a-bb90-939257f15ca7"
+            }
+          ],
+          "comp_order": 1
+        },
+        {
+          "pcc_id": "i-m5fgONrssR",
+          "prog_course_id": "i-GXgmh00DXK",
+          "title": "Examines Foundational Educational Theories",
+          "statement": "The learner examines foundational educational theories in respect to learner growth and development.",
+          "level": 2,
+          "assessment": "OA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "I",
+            "i-8DvdCQVskp": "I",
+            "i-h0bUk6iSUF": "I",
+            "i-dwHp3c0lb0": "I"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-7eF9rIc16N",
+              "category": "Instructional Strategies",
+              "title": "Evidence-Based Instructional Practice Analysis",
+              "statement": "Analyze evidence-based instructional practices.",
+              "url": "https://osmt.wgu.edu/api/skills/95ef48ad-2171-4ed5-bf3d-6d5efb44219f"
+            },
+            {
+              "id": "i-GhLqsJvxHs",
+              "category": "Problem Solving",
+              "title": "Solution Reexamination",
+              "statement": "Reexamine a problem and its solution for improvement opportunities.",
+              "url": "https://osmt.wgu.edu/api/skills/0975c86d-fce4-4427-b9bf-24619fcc1eee"
+            }
+          ],
+          "comp_order": 2
+        },
+        {
+          "pcc_id": "i-Wc8lsfHVUl",
+          "prog_course_id": "i-GXgmh00DXK",
+          "title": "Applies Human Development and Learning Science",
+          "statement": "The learner applies human development and learning science to educational practices.",
+          "level": 2,
+          "assessment": "OA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "I",
+            "i-8DvdCQVskp": "I",
+            "i-h0bUk6iSUF": "I",
+            "i-dwHp3c0lb0": "I"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-y55YxtkSRI",
+              "category": "Curriculum Development",
+              "title": "Create Instruction that Encourages Construction of Knowledge",
+              "statement": "Create instruction that encourages learners' construction of knowledge, skill acquisition, and disciplined thinking processes.",
+              "url": "https://osmt.wgu.edu/api/skills/6a8565b4-06a2-4796-ac1b-67e67d179a62"
+            },
+            {
+              "id": "i-K3RkI-xKlI",
+              "category": "Instructional Strategies",
+              "title": "Instructional Strategy Implementation",
+              "statement": "Implement the use of  instructional strategies that aid in improving student retention.",
+              "url": "https://osmt.wgu.edu/api/skills/be5a141a-881b-4024-87a4-7fbb32e06f09"
+            }
+          ],
+          "comp_order": 3
+        },
+        {
+          "pcc_id": "i-S-oUfwEf1D",
+          "prog_course_id": "i-GXgmh00DXK",
+          "title": "Evaluates Theories of Understanding and Knowledge Retention",
+          "statement": "The learner evaluates theories of understanding and knowledge retention in the contemporary classroom.",
+          "level": 2,
+          "assessment": "OA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "I",
+            "i-8DvdCQVskp": "I",
+            "i-h0bUk6iSUF": "I",
+            "i-dwHp3c0lb0": "I",
+            "i-7q070Z48A1": "I"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-cOikagEZM7",
+              "category": "Instructional Design",
+              "title": "Knowledge Retention Improvement",
+              "statement": "Improve knowledge retention through the use of complementary text and graphics in instruction.",
+              "url": "https://osmt.wgu.edu/api/skills/80fb4782-151c-47d6-8325-27cc8d51062e"
+            },
+            {
+              "id": "i-xExr7XUU3x",
+              "category": "Instructional Strategies",
+              "title": "Higher-Order and Metacognitive Instructional Strategies",
+              "statement": "Select instructional strategies that develop higher-order questioning skills and metacognitive processes.",
+              "url": "https://osmt.wgu.edu/api/skills/2b8b9bbb-3c21-4a9b-b10a-5a64ca1443b8"
+            },
+            {
+              "id": "i-f5G1QoPrlX",
+              "category": "Instructional Strategies",
+              "title": "Select Strategies to Develop Higher Order Thinking",
+              "statement": "Select instructional strategies that engage learners in developing higher-order thinking skills.",
+              "url": "https://osmt.wgu.edu/api/skills/2a0f0543-b8e0-42e6-97b5-43ebb2260798"
+            }
+          ],
+          "comp_order": 4
+        }
+      ]
+    },
+    {
+      "prog_course_id": "i-iPbrpvUk1Q",
+      "course_base_id": "i-owTcG53KKS",
+      "code": "EXXX",
+      "name": "Collaboration and Consultation in Education",
+      "display_name": "EXXX: Collaboration and Consultation in Education",
+      "term": "1",
+      "std_path_order": 2,
+      "cu": 3,
+      "scope": "New",
+      "ownership": "WSE",
+      "designation": "",
+      "certificate": "",
+      "scope_notes": "This course focuses on instructional leadership with an emphasis on curriculum development and implementation across educational settings. It explores the application of leadership strategies to support effective instruction through collaboration with teacher groups, departments, school boards, families, communities, and other stakeholders. The course also dives into the use of data-informed decision-making for curriculum alignment, professional development planning, and teaching practices and instruction.",
+      "description": "",
+      "po_alignments": {
+        "i-jSngIIZ9ua": "I"
+      },
+      "cct_alignments": {},
+      "competencies": [
+        {
+          "pcc_id": "i-L_zyCcPx6K",
+          "prog_course_id": "i-iPbrpvUk1Q",
+          "title": "Differentiates between Communication, Collaboration, and Consultation",
+          "statement": "The learner differentiates between communication, collaboration, and consultation in learning environments.",
+          "level": 2,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-dwHp3c0lb0": "R",
+            "i-jSngIIZ9ua": "I"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-QHRDe2-3_6",
+              "category": "Interpersonal Communications",
+              "title": "Analyze The Effectiveness Of Interpersonal Communication",
+              "statement": "Analyze the effectiveness of interpersonal communication in various contexts.",
+              "url": "https://osmt.wgu.edu/api/skills/e728112e-80f9-424a-90dc-71fa1becfbc9"
+            },
+            {
+              "id": "i-3sCT5D6L4G",
+              "category": "Interpersonal Communications",
+              "title": "Apply Principles Interpersonal Communication",
+              "statement": "Apply principles of effective interpersonal communication.",
+              "url": "https://osmt.wgu.edu/api/skills/07f70e80-4f0a-4551-bef2-2dcf0ce59354"
+            },
+            {
+              "id": "i-QIhvekk7_f",
+              "category": "Leadership",
+              "title": "Build Positive Culture",
+              "statement": "Builds a collaborative, inclusive, and positive team culture.",
+              "url": "https://osmt.wgu.edu/api/skills/f8affba2-fb6e-466a-852c-cf08516dbd4b"
+            }
+          ],
+          "comp_order": 1
+        },
+        {
+          "pcc_id": "i-aWcjmyIkJ3",
+          "prog_course_id": "i-iPbrpvUk1Q",
+          "title": "Fosters Collaborative Partnerships",
+          "statement": "The learner collaborates with educators, families, and community stakeholders to build productive partnerships that support student learning, promote equity, and address diverse learning needs.",
+          "level": 2,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-dwHp3c0lb0": "R",
+            "i-jSngIIZ9ua": "I"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-n0GwYl2WL2",
+              "category": "Interpersonal Communications",
+              "title": "Collaborative Environment Creation",
+              "statement": "Create a collaborative work environment through interpersonal communication skills.",
+              "url": "https://osmt.wgu.edu/api/skills/1b08d3d8-fcc1-41e7-8c40-a882e98ce2cd"
+            },
+            {
+              "id": "i-swkV9WToQv",
+              "category": "Leadership",
+              "title": "Team Inclusion and Collaboration Cultivation",
+              "statement": "Cultivate an environment of inclusion and collaboration that values the input of all team members.",
+              "url": "https://osmt.wgu.edu/api/skills/40f03fb2-d5fd-4d8d-958d-fc72512fe963"
+            }
+          ],
+          "comp_order": 2
+        },
+        {
+          "pcc_id": "i-crQoyoesYP",
+          "prog_course_id": "i-iPbrpvUk1Q",
+          "title": "Facilitates Professional Collaboration",
+          "statement": "The learner facilitates collaboration among colleagues by leading team-based efforts, such as professional learning communities and instructional planning, to address shared goals and improve teaching and learning outcomes.",
+          "level": 2,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-8DvdCQVskp": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-jSngIIZ9ua": "I"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-k9lhe6tpOl",
+              "category": "Leadership",
+              "title": "Apply Appropriate Levels of Moderation and Community Management",
+              "statement": "Apply appropriate levels of moderation and community management to ensure a safe and welcoming learning community.",
+              "url": "https://osmt.wgu.edu/api/skills/cfa49647-d471-4874-8538-471503b4b4e5"
+            },
+            {
+              "id": "i-Y3APBDA0lF",
+              "category": "Leadership",
+              "title": "Collaborative Strategy Development",
+              "statement": "Develop strategies with organizational team leads.",
+              "url": "https://osmt.wgu.edu/api/skills/5aadc03a-723b-4b69-8fa8-9630eb8160e5"
+            }
+          ],
+          "comp_order": 3
+        },
+        {
+          "pcc_id": "i-mR3BmhoBQp",
+          "prog_course_id": "i-iPbrpvUk1Q",
+          "title": "Leads Professional Learning through Consultation",
+          "statement": "The learner applies consultation strategies to design and lead professional learning opportunities that address identified instructional needs and support continuous improvement in learning environments.",
+          "level": 2,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-8DvdCQVskp": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-jSngIIZ9ua": "I",
+            "i-i1x7EGPutE": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-qnwuXNaaiW",
+              "category": "Management",
+              "title": "Supervision Strategies Application",
+              "statement": "Apply supervision strategies and consultation practices in a given situation.",
+              "url": "https://osmt.wgu.edu/api/skills/246d1d24-7fa4-4d38-8d90-05c230acbf68"
+            },
+            {
+              "id": "i-kQzZY-lKIh",
+              "category": "Management",
+              "title": "Supervision to Improve Effectiveness Analysis",
+              "statement": "Analyze the uses of supervision and consultation to improve effectiveness.",
+              "url": "https://osmt.wgu.edu/api/skills/22b14946-3051-4135-84d5-68e711f70b32"
+            }
+          ],
+          "comp_order": 4
+        }
+      ]
+    },
+    {
+      "prog_course_id": "i-Dukjo_KCKV",
+      "course_base_id": "i-4N15peaI5L",
+      "code": "EXXX",
+      "name": "Professional and Ethical Use of Educational Technology",
+      "display_name": "EXXX: Professional and Ethical Use of Educational Technology",
+      "term": "1",
+      "std_path_order": 3,
+      "cu": 3,
+      "scope": "New",
+      "ownership": "WSE",
+      "designation": "",
+      "certificate": "",
+      "scope_notes": "This course focuses on the integration of educational technology across curriculum, assessment, and instruction to enhance student learning. The course explains the process of evaluating and recommending appropriate technologies, including assistive and accessibility tools, to support diverse learner needs. The course also touches on analyzing the technical aspects, ethical use, potential risks, and mitigation strategies associated with emerging technologies, including AI, to ensure responsible and effective implementation in educational settings.",
+      "description": "",
+      "po_alignments": {
+        "i-7q070Z48A1": "A"
+      },
+      "cct_alignments": {},
+      "competencies": [
+        {
+          "pcc_id": "i-vwICHuNQLs",
+          "prog_course_id": "i-Dukjo_KCKV",
+          "title": "Evaluates Educational Technology and Compliance",
+          "statement": "The learner evaluates ethical, legal, and professional standards related to the use of educational technology, including data privacy, intellectual property, accessibility, and digital citizenship, to ensure responsible and compliant instructional practices.",
+          "level": 2.333,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-i1x7EGPutE": "R",
+            "i-7q070Z48A1": "I"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-TNB9tZTN-7",
+              "category": "Research",
+              "title": "Research Design Practices",
+              "statement": "Researches innovations based on latest design practices, instructional trends, and educational technology.",
+              "url": "https://osmt.wgu.edu/api/skills/c8e51f0e-d30f-4a15-9ec1-d56a1f10031c"
+            }
+          ],
+          "comp_order": 1
+        },
+        {
+          "pcc_id": "i-w9-ohG9pNU",
+          "prog_course_id": "i-Dukjo_KCKV",
+          "title": "Selects Educational Technologies through Analysis",
+          "statement": "The learner selects educational technologies based on instructional needs across various learning models, including blended and online learning environments, while evaluating emerging technologies for their potential to enhance teaching, learning, and student engagement.",
+          "level": 2.333,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-8DvdCQVskp": "R",
+            "i-h0bUk6iSUF": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-i1x7EGPutE": "R",
+            "i-7q070Z48A1": "I"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-0zM9Cnrq9A",
+              "category": "Instructional and Curriculum Design",
+              "title": "Evaluate Curriculum Design Against Requirements",
+              "statement": "Evaluate curriculum design against learning requirements, audience, and new technologies.",
+              "url": "https://osmt.wgu.edu/api/skills/58e08730-b45c-4d8d-bb39-c9566cb633dd"
+            }
+          ],
+          "comp_order": 2
+        },
+        {
+          "pcc_id": "i-wHEtsrsRN_",
+          "prog_course_id": "i-Dukjo_KCKV",
+          "title": "Implements Educational Technology",
+          "statement": "The learner implements educational technologies in learning environments using ethical practices and professional standards, ensuring appropriate data use, accessibility, and equitable engagement while monitoring and adjusting practices based on learner needs and outcomes.",
+          "level": 2.333,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-8DvdCQVskp": "R",
+            "i-h0bUk6iSUF": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-jSngIIZ9ua": "R",
+            "i-7q070Z48A1": "I"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-cwH-yo1HJn",
+              "category": "Instructional Strategies",
+              "title": "Evidence-Based Instructional Strategies Implementation",
+              "statement": "Implement evidence-based instructional strategies with resources and technologies.",
+              "url": "https://osmt.wgu.edu/api/skills/0f50ef52-0873-41ff-8ed3-c64449347450"
+            }
+          ],
+          "comp_order": 3
+        }
+      ]
+    },
+    {
+      "prog_course_id": "i-6ralpu_SvY",
+      "course_base_id": "i-grPan8Azqm",
+      "code": "EXXX",
+      "name": "Educational Research Foundations",
+      "display_name": "EXXX: Educational Research Foundations",
+      "term": "2",
+      "std_path_order": 4,
+      "cu": 3,
+      "scope": "New",
+      "ownership": "WSE",
+      "designation": "",
+      "certificate": "",
+      "scope_notes": "This course focuses on research literacy by building foundational knowledge of research principles, methodologies, and processes in education. The course explains key aspects of research, including: qualitative and quantitative approaches, finding resources, research questions, and problem statements. The course also builds out foundations for research analysis, including: data collection methods, reading, interpreting, and analyzing research studies, and data collection instruments. Through these foundational steps, learners are prepared to engage in tasks such as developing annotated bibliographies, conducting literature reviews, and selecting research and data analysis methods.",
+      "description": "",
+      "po_alignments": {
+        "i-i1x7EGPutE": "A"
+      },
+      "cct_alignments": {},
+      "competencies": [
+        {
+          "pcc_id": "i-yCBJgCqGXu",
+          "prog_course_id": "i-6ralpu_SvY",
+          "title": "Analyzes Educational Research Studies",
+          "statement": "The learner analyzes educational research studies by interpreting and analyzing data, identifying key findings, and examining the alignment between research questions, methodologies, and conclusions to determine implications for data-informed instructional practices.",
+          "level": 2.667,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-8DvdCQVskp": "R",
+            "i-h0bUk6iSUF": "R",
+            "i-i1x7EGPutE": "M",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-PjaxkO9aNB",
+              "category": "Research",
+              "title": "Public Data Analysis",
+              "statement": "Analyze data from public databases.",
+              "url": "https://osmt.wgu.edu/api/skills/db25e2fc-25b5-4a71-9046-3c4e9a491269"
+            },
+            {
+              "id": "i-pR6iLto3-o",
+              "category": "Research",
+              "title": "Relevant Evidence Collection",
+              "statement": "Collect relevant evidence to address healthcare questions and problems.",
+              "url": "https://osmt.wgu.edu/api/skills/5c7ea76d-e87c-4cb0-99e1-bff344c4f336"
+            },
+            {
+              "id": "i-NxqC3Nn-MX",
+              "category": "Research",
+              "title": "Resource Use Demonstration",
+              "statement": "Demonstrate how to use resources in research.",
+              "url": "https://osmt.wgu.edu/api/skills/8f6f6e3c-60b1-4bb6-ade0-79a223b3c299"
+            }
+          ],
+          "comp_order": 1
+        },
+        {
+          "pcc_id": "i-8cYj6C1y2H",
+          "prog_course_id": "i-6ralpu_SvY",
+          "title": "Interprets Educational Research and Data in Learning Environments",
+          "statement": "The learner interprets foundational concepts of educational research and data literacy to read, interpret, and evaluate research findings to inform instructional decisions that improve learning, instruction, curriculum, and training across diverse learning environments.",
+          "level": 2.667,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-8DvdCQVskp": "R",
+            "i-h0bUk6iSUF": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-i1x7EGPutE": "M",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-IQ6TvIN7o9",
+              "category": "Research",
+              "title": "Analyze Data from Research Findings",
+              "statement": "Analyze data from research findings.",
+              "url": "https://osmt.wgu.edu/api/skills/2e5d39a3-e786-499b-8a9d-29520209f65c"
+            },
+            {
+              "id": "i-SZDF49oUIk",
+              "category": "Research",
+              "title": "Interpret Research Findings",
+              "statement": "Interpret research findings.",
+              "url": "https://osmt.wgu.edu/api/skills/9216283f-0f78-4346-bb5c-eb3b00bbcec5"
+            }
+          ],
+          "comp_order": 2
+        },
+        {
+          "pcc_id": "i-GnREnF8w7H",
+          "prog_course_id": "i-6ralpu_SvY",
+          "title": "Applies Educational Research Principles",
+          "statement": "The learner applies educational research principles by formulating a problem statement and research questions, locating and selecting relevant scholarly sources using academic research tools, and aligning appropriate research methodologies to the identified topic.",
+          "level": 2.667,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-8DvdCQVskp": "R",
+            "i-h0bUk6iSUF": "R",
+            "i-i1x7EGPutE": "M",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-Zi9vQFATUA",
+              "category": "Instructional Design",
+              "title": "Research Interdisciplinary Principles",
+              "statement": "Research interdisciplinary principles from related fields that may improve instructional design practices.",
+              "url": "https://osmt.wgu.edu/api/skills/ef7a9974-60f6-4267-adcf-56079da8695a"
+            },
+            {
+              "id": "i-giMvsoGA4G",
+              "category": "Research",
+              "title": "Apply Research to Real-World Situations",
+              "statement": "Apply research to real-world situations.",
+              "url": "https://osmt.wgu.edu/api/skills/1c2208fa-52d5-41e9-8999-b17ba3e2f4cc"
+            }
+          ],
+          "comp_order": 3
+        }
+      ]
+    },
+    {
+      "prog_course_id": "i-pL64G-CjZQ",
+      "course_base_id": "i-IiiZWzkAL4",
+      "code": "EXXX",
+      "name": "Instructional Leadership",
+      "display_name": "EXXX: Instructional Leadership",
+      "term": "2",
+      "std_path_order": 5,
+      "cu": 3,
+      "scope": "New",
+      "ownership": "WSE",
+      "designation": "",
+      "certificate": "",
+      "scope_notes": "This course focuses on developing core leadership strategies that support effective teaching and learning. The course examines curriculum design and alignment, along with foundational principles of assessment for learning, including how to analyze and use data to guide instructional decisions. The course emphasizes applying common instructional leadership practices to improve curriculum implementation, monitor student progress, and drive data-informed instruction that enhances student outcomes.",
+      "description": "",
+      "po_alignments": {
+        "i-jSngIIZ9ua": "M, A"
+      },
+      "cct_alignments": {},
+      "competencies": [
+        {
+          "pcc_id": "i-djufU1Q08w",
+          "prog_course_id": "i-pL64G-CjZQ",
+          "title": "Examines the Role of Instructional Leadership",
+          "statement": "The learner examines the responsibilities and impact of instructional leadership, including fostering collaborative cultures, supporting educator development, and promoting equitable learning outcomes.",
+          "level": 2,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-dwHp3c0lb0": "R",
+            "i-jSngIIZ9ua": "M",
+            "i-i1x7EGPutE": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-W6JsfiA20V",
+              "category": "Leadership",
+              "title": "Articulate Leadership Characteristics",
+              "statement": "Articulate the characteristics and components needed to be an effective leader.",
+              "url": "https://osmt.wgu.edu/api/skills/644e622a-1d54-4ac1-b830-5fd1751bc29e"
+            },
+            {
+              "id": "i-Y3APBDA0lF",
+              "category": "Leadership",
+              "title": "Collaborative Strategy Development",
+              "statement": "Develop strategies with organizational team leads.",
+              "url": "https://osmt.wgu.edu/api/skills/5aadc03a-723b-4b69-8fa8-9630eb8160e5"
+            }
+          ],
+          "comp_order": 1
+        },
+        {
+          "pcc_id": "i-RDH8hcuU8F",
+          "prog_course_id": "i-pL64G-CjZQ",
+          "title": "Designs Instructional Leadership Plans",
+          "statement": "The learner designs strategic instructional leadership plans that incorporate evidence-based practices, professional learning structures, and measurable goals to support educator development and student success.",
+          "level": 2,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-h0bUk6iSUF": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-jSngIIZ9ua": "M"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-3a2o2YlkZy",
+              "category": "Leadership",
+              "title": "Develop Strategic Plans",
+              "statement": "Develop strategic plans.",
+              "url": "https://osmt.wgu.edu/api/skills/dd9d39ff-fde4-4639-b4d9-1b49d14f1274"
+            },
+            {
+              "id": "i-i9chuPQBvI",
+              "category": "Leadership",
+              "title": "Implement Evidence-Based Processes for Student Success",
+              "statement": "Implement evidence-based processes that aid learners in achieving successful outcomes.",
+              "url": "https://osmt.wgu.edu/api/skills/9d48b178-c29e-48e9-8069-4a4391da626c"
+            }
+          ],
+          "comp_order": 2
+        },
+        {
+          "pcc_id": "i--YJYlAK4U8",
+          "prog_course_id": "i-pL64G-CjZQ",
+          "title": "Implements Instructional Leadership Practices",
+          "statement": "The learner implements instructional leadership strategies that enhance instruction and student achievement through coaching, feedback, and data-driven decision-making.",
+          "level": 2,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-8DvdCQVskp": "R",
+            "i-h0bUk6iSUF": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-jSngIIZ9ua": "M",
+            "i-i1x7EGPutE": "R",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-koCvXPTc9q",
+              "category": "Leadership",
+              "title": "Implement Strategic Plans",
+              "statement": "Implement strategic plans.",
+              "url": "https://osmt.wgu.edu/api/skills/b10194c2-56d6-4bc8-b669-ef1b902225fe"
+            },
+            {
+              "id": "i-jAlvbuO66t",
+              "category": "Leadership",
+              "title": "Resource Use Decision Making",
+              "statement": "Make informed decisions to determine the best use of resources for a firm.",
+              "url": "https://osmt.wgu.edu/api/skills/61763fec-ff29-4c6d-871e-9bc804c53a31"
+            },
+            {
+              "id": "i-4s89WZtjEL",
+              "category": "Leadership",
+              "title": "Strategy Feedback Solicitation",
+              "statement": "Solicit feedback on strategy, vision, mission, or goals.",
+              "url": "https://osmt.wgu.edu/api/skills/98e90eb1-7edb-469d-ac8e-fb6046d8da3d"
+            }
+          ],
+          "comp_order": 3
+        }
+      ]
+    },
+    {
+      "prog_course_id": "i-GkKEzNG5G7",
+      "course_base_id": "i-QFlGuFhRmN",
+      "code": "EXXX",
+      "name": "Diversity and Equity",
+      "display_name": "EXXX: Diversity and Equity",
+      "term": "2",
+      "std_path_order": 6,
+      "cu": 3,
+      "scope": "New",
+      "ownership": "WSE",
+      "designation": "",
+      "certificate": "",
+      "scope_notes": "This course centers on equity, access, and culturally responsive professional practice in literacy development.",
+      "description": "",
+      "po_alignments": {
+        "i-dwHp3c0lb0": "A"
+      },
+      "cct_alignments": {},
+      "competencies": [
+        {
+          "pcc_id": "i-DRHr7HLIIk",
+          "prog_course_id": "i-GkKEzNG5G7",
+          "title": "Creates Equitable Learning Experiences",
+          "statement": "The learner creates equitable learning experiences that promote achievement for all students.",
+          "level": 3,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-8DvdCQVskp": "R",
+            "i-h0bUk6iSUF": "R",
+            "i-dwHp3c0lb0": "M"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-V11h1KqoPS",
+              "category": "Cultural Diversity",
+              "title": "Safe and Inclusive Classroom Environment Promotion ",
+              "statement": "Promote a safe and inclusive classroom environment for all students regardless of cultural background or other differences. ",
+              "url": ""
+            }
+          ],
+          "comp_order": 1
+        },
+        {
+          "pcc_id": "i-0f8SXdZNj5",
+          "prog_course_id": "i-GkKEzNG5G7",
+          "title": "Leads Educators in Evaluating Curriculum and Implementing Diverse Instructional Practices",
+          "statement": "The learner leads educators in evaluating curriculum and implementing culturally and linguistically diverse instructional practices.",
+          "level": 3,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-8DvdCQVskp": "R",
+            "i-dwHp3c0lb0": "M",
+            "i-jSngIIZ9ua": "R",
+            "i-i1x7EGPutE": "R",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-Puk5q8MaMj",
+              "category": "Communication",
+              "title": "Communication Techniques Leveraging",
+              "statement": "Leverage appropriate communication techniques to persuade and guide outcomes.",
+              "url": ""
+            },
+            {
+              "id": "i-k6Pvd_kYvw",
+              "category": "Employee Coaching",
+              "title": "Help Employees Develop New Skills",
+              "statement": "Facilitate skill development in employees to enhance performance through coaching.",
+              "url": ""
+            }
+          ],
+          "comp_order": 2
+        },
+        {
+          "pcc_id": "i-2JCUM16-BG",
+          "prog_course_id": "i-GkKEzNG5G7",
+          "title": "Advocates for Equitable Systems",
+          "statement": "The learner advocates for equitable systems that support multilingual and neurodiverse students within evidence-based standards and frameworks.",
+          "level": 3,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-8DvdCQVskp": "R",
+            "i-h0bUk6iSUF": "R",
+            "i-dwHp3c0lb0": "M",
+            "i-jSngIIZ9ua": "M",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-rRqacJRLK9",
+              "category": "Lesson Planning",
+              "title": "Develop Equitable and Inclusive Instruction",
+              "statement": "Develop instruction that demonstrates principles of equitable access and inclusion.",
+              "url": ""
+            },
+            {
+              "id": "i-2qBjg2zNgk",
+              "category": "Social Justice",
+              "title": "Equitable Practices Promotion",
+              "statement": "Promote equitable practices.",
+              "url": ""
+            }
+          ],
+          "comp_order": 3
+        }
+      ]
+    },
+    {
+      "prog_course_id": "i-7Aof3hqAh6",
+      "course_base_id": "i-xR6HVIFryd",
+      "code": "EXXX",
+      "name": "Principles and Analysis of Curriculum",
+      "display_name": "EXXX: Principles and Analysis of Curriculum",
+      "term": "3",
+      "std_path_order": 7,
+      "cu": 3,
+      "scope": "New",
+      "ownership": "WSE",
+      "designation": "",
+      "certificate": "",
+      "scope_notes": "This course focuses on evaluating curriculum through the application of established theories, principles, and models, and using that analysis to inform continuous improvement. Learners develop curriculum maps that build on existing skills, prior learning, and historical data, while aligning curriculum to the evolving needs of students through the integration of EdTech and blended teaching models. The course also explores curriculum recommendations that respond to changing standards and demands, ensuring curriculum is accessible to all learners.",
+      "description": "",
+      "po_alignments": {
+        "i-9Me4zgDN0w": "A"
+      },
+      "cct_alignments": {},
+      "competencies": [
+        {
+          "pcc_id": "i-o4mqamjzyg",
+          "prog_course_id": "i-7Aof3hqAh6",
+          "title": "Evaluates Curriculum",
+          "statement": "The learner evaluates curriculum through the application of theories, principles, and models.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "M",
+            "i-8DvdCQVskp": "R",
+            "i-h0bUk6iSUF": "R",
+            "i-i1x7EGPutE": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-eJN9f-85iP",
+              "category": "Curriculum Development",
+              "title": "Curriculum to Standards Evaluation",
+              "statement": "Evaluate curriculum against national education or industry standards.",
+              "url": "https://osmt.wgu.edu/api/skills/bb1e82e6-4572-4221-b716-b6067dff7535"
+            },
+            {
+              "id": "i-0zM9Cnrq9A",
+              "category": "Instructional and Curriculum Design",
+              "title": "Evaluate Curriculum Design Against Requirements",
+              "statement": "Evaluate curriculum design against learning requirements, audience, and new technologies.",
+              "url": "https://osmt.wgu.edu/api/skills/58e08730-b45c-4d8d-bb39-c9566cb633dd"
+            }
+          ],
+          "comp_order": 1
+        },
+        {
+          "pcc_id": "i-ieD9j9LGAn",
+          "prog_course_id": "i-7Aof3hqAh6",
+          "title": "Analyzes Scope and Sequence of a Curriculum Map",
+          "statement": "The learner analyzes the scope and sequence of a curriculum map against given standards.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "M",
+            "i-8DvdCQVskp": "R",
+            "i-jSngIIZ9ua": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-wBSLqD0weE",
+              "category": "Curriculum Development",
+              "title": "Educational Objectives Alignment Evaluation",
+              "statement": "Evaluate the alignment of educational objectives to the curriculum and instructional goals to meet the learning goals for students.",
+              "url": "https://osmt.wgu.edu/api/skills/fae8e1ba-caa2-4bee-9065-4b2077bc3589"
+            },
+            {
+              "id": "i-JUhvdkYSyY",
+              "category": "Curriculum Development",
+              "title": "Learning Experiences Sequencing",
+              "statement": "Sequence learning experiences that align to learning objectives and student goals.",
+              "url": "https://osmt.wgu.edu/api/skills/edd33a68-5994-417c-9e53-a8b1ac71639c"
+            }
+          ],
+          "comp_order": 2
+        },
+        {
+          "pcc_id": "i-4GnTE1w8bb",
+          "prog_course_id": "i-7Aof3hqAh6",
+          "title": "Aligns a Curriculum to Evolving Needs",
+          "statement": "The learner aligns a curriculum to the evolving needs of students.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "M",
+            "i-dwHp3c0lb0": "R",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-5OABB7QFqW",
+              "category": "Curriculum Development",
+              "title": "Curriculum Alignment",
+              "statement": "Align curriculum vision, focus, and objectives to the needs of students.",
+              "url": "https://osmt.wgu.edu/api/skills/b8367c21-d183-4f1e-9366-834436cc46cc"
+            }
+          ],
+          "comp_order": 3
+        },
+        {
+          "pcc_id": "i-TX_BoMzV2K",
+          "prog_course_id": "i-7Aof3hqAh6",
+          "title": "Supports the Implementation of Curriculum",
+          "statement": "The learner applies research based principles of implementation science to support stakeholders in implementing curriculum for a diverse group of students.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "M",
+            "i-8DvdCQVskp": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-jSngIIZ9ua": "R",
+            "i-i1x7EGPutE": "R",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-XJeH4EVhoS",
+              "category": "Curriculum Development",
+              "title": "Curriculum Change Selection",
+              "statement": "Select curriculum areas for change based on data or research.",
+              "url": "https://osmt.wgu.edu/api/skills/a075a55c-1be4-4dc9-a769-abadee622c76"
+            },
+            {
+              "id": "i-GYkFcoO_c7",
+              "category": "Lesson Planning",
+              "title": "Goal-Aligned Lesson Implementation",
+              "statement": "Implement single lessons and sequences of lessons that align to curriculum goals and content standards, are relevant to learners, and meet the educational needs of a diverse student population.",
+              "url": "https://osmt.wgu.edu/api/skills/e36241d5-db44-4956-8d12-97dde701aa25"
+            }
+          ],
+          "comp_order": 4
+        }
+      ]
+    },
+    {
+      "prog_course_id": "i-_YSn6vgIrh",
+      "course_base_id": "i--vk-DumNID",
+      "code": "EXXX",
+      "name": "Instructional Practices and Implementation",
+      "display_name": "EXXX: Instructional Practices and Implementation",
+      "term": "3",
+      "std_path_order": 8,
+      "cu": 3,
+      "scope": "New",
+      "ownership": "WSE",
+      "designation": "",
+      "certificate": "",
+      "scope_notes": "This course walks through the evaluation instructional models, theories, and evidence-based approaches that support effective teaching. Learners apply these practices to differentiate instruction, including the integration of EdTech to meet diverse student needs. The course introduces implementation strategies for communicating meaningful feedback, incorporating multi-disciplinary approaches into instruction, and applying evidence-based methods to strengthen student understanding and long-term knowledge retention.",
+      "description": "",
+      "po_alignments": {
+        "i-h0bUk6iSUF": "A"
+      },
+      "cct_alignments": {},
+      "competencies": [
+        {
+          "pcc_id": "i-1ey0GaYhnC",
+          "prog_course_id": "i-_YSn6vgIrh",
+          "title": "Examines Instructional Models",
+          "statement": "The learner examines the application of instructional models against the needs of varied learning environments.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-h0bUk6iSUF": "M",
+            "i-dwHp3c0lb0": "R",
+            "i-jSngIIZ9ua": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-CUrZtgWhP7",
+              "category": "Instructional Design",
+              "title": "Design Model Effectiveness",
+              "statement": "Determine an effective educational design model to meet the needs of learners.",
+              "url": "https://osmt.wgu.edu/api/skills/dc2e2082-be57-4036-90c0-98cdc7746ce1"
+            }
+          ],
+          "comp_order": 1
+        },
+        {
+          "pcc_id": "i-0xB-qZ4qdM",
+          "prog_course_id": "i-_YSn6vgIrh",
+          "title": "Differentiates Instruction",
+          "statement": "The learner differentiates instruction through the modification of content, process, and product.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-8DvdCQVskp": "R",
+            "i-h0bUk6iSUF": "M",
+            "i-dwHp3c0lb0": "R",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-7hgEfHR-qp",
+              "category": "Lesson Planning",
+              "title": "Students with Exceptionalities Learning Differentiation",
+              "statement": "Differentiate process, content, products, and the learning environment to meet the needs of individual students with exceptionalities.",
+              "url": "https://osmt.wgu.edu/api/skills/26fb2663-d7ed-44be-9c0e-461ce8c10595"
+            }
+          ],
+          "comp_order": 2
+        },
+        {
+          "pcc_id": "i-CNrSJJvfNd",
+          "prog_course_id": "i-_YSn6vgIrh",
+          "title": "Incorporates Evidence-Based Research into Instruction",
+          "statement": "The learner incorporates evidence-based research into instruction.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-h0bUk6iSUF": "M",
+            "i-jSngIIZ9ua": "R",
+            "i-i1x7EGPutE": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-cwH-yo1HJn",
+              "category": "Instructional Strategies",
+              "title": "Evidence-Based Instructional Strategies Implementation",
+              "statement": "Implement evidence-based instructional strategies with resources and technologies.",
+              "url": "https://osmt.wgu.edu/api/skills/0f50ef52-0873-41ff-8ed3-c64449347450"
+            }
+          ],
+          "comp_order": 3
+        },
+        {
+          "pcc_id": "i-S-bo9s_cUW",
+          "prog_course_id": "i-_YSn6vgIrh",
+          "title": "Provides Instructional Feedback",
+          "statement": "The learner provides feedback to enhance the implementation of instruction.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-h0bUk6iSUF": "M",
+            "i-jSngIIZ9ua": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-oTMxSr_bpT",
+              "category": "Teaching",
+              "title": "Peer Feedback Instruction",
+              "statement": "Instruct learners in peer feedback to improve work.",
+              "url": "https://osmt.wgu.edu/api/skills/05957003-6fa6-4b59-bd3b-c4276e020303"
+            }
+          ],
+          "comp_order": 4
+        }
+      ]
+    },
+    {
+      "prog_course_id": "i-I9MTcu7USE",
+      "course_base_id": "i-w7GTYjgHef",
+      "code": "EXXX",
+      "name": "Assessment for Learning",
+      "display_name": "EXXX: Assessment for Learning",
+      "term": "3",
+      "std_path_order": 9,
+      "cu": 3,
+      "scope": "New",
+      "ownership": "WSE",
+      "designation": "",
+      "certificate": "",
+      "scope_notes": "This course focuses on foundational understanding of assessment principles and forms of assessment. It introduces the process for designing and implementing assessments, analyzing assessment validity and risk, and using assessment data. The course explores concepts of assessment enhancement and refinement based on data-driven insights, with analysis and implementation of technology with assessment.",
+      "description": "",
+      "po_alignments": {
+        "i-8DvdCQVskp": "A"
+      },
+      "cct_alignments": {},
+      "competencies": [
+        {
+          "pcc_id": "i-wuClA5JUjy",
+          "prog_course_id": "i-I9MTcu7USE",
+          "title": "Explains Foundational Principles of Assessment",
+          "statement": "The learner explains the foundational principles of assessment, including forms of assessment.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-8DvdCQVskp": "M",
+            "i-h0bUk6iSUF": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-Bfu0Qgp0KR",
+              "category": "Instructional Design",
+              "title": "Describe Analytic Strategies",
+              "statement": "Develop assessment strategies using learning analytics.",
+              "url": "https://osmt.wgu.edu/api/skills/fd85cb5c-dd84-4b6c-b757-86c9c029bcdc"
+            }
+          ],
+          "comp_order": 1
+        },
+        {
+          "pcc_id": "i-Z1j6Ivlltt",
+          "prog_course_id": "i-I9MTcu7USE",
+          "title": "Analyzes the Validity, Risk, and Reliability of an Assessment",
+          "statement": "The learner analyzes the validity, risk, and reliability of an assessment through assessment data analysis.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-8DvdCQVskp": "M",
+            "i-h0bUk6iSUF": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-i1x7EGPutE": "R",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-W3F_zgPDLX",
+              "category": "Instructional Design",
+              "title": "Analyze Evaluation Data",
+              "statement": "Analyze instructional systems evaluations to improve validity, effectiveness, and efficiency.",
+              "url": "https://osmt.wgu.edu/api/skills/99093c47-06c1-412d-a747-dbbccfd3f678"
+            },
+            {
+              "id": "i-aa8ehxBH7C",
+              "category": "Lesson Planning",
+              "title": "Instruction and Learning Effectiveness Assessment",
+              "statement": "Implement ongoing assessment to determine the effectiveness of instruction and student learning.",
+              "url": "https://osmt.wgu.edu/api/skills/8a686c19-d255-4c85-a8d6-d89369adf71a"
+            }
+          ],
+          "comp_order": 2
+        },
+        {
+          "pcc_id": "i-SV58zFOF_I",
+          "prog_course_id": "i-I9MTcu7USE",
+          "title": "Analyzes Assessment Data for Instruction",
+          "statement": "The learner analyzes data to adjust instruction, enhance student achievement, and inform feedback.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-8DvdCQVskp": "M",
+            "i-h0bUk6iSUF": "R",
+            "i-dwHp3c0lb0": "R",
+            "i-jSngIIZ9ua": "R",
+            "i-i1x7EGPutE": "R",
+            "i-7q070Z48A1": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-Fh-XCcxG_y",
+              "category": "Instructional Design",
+              "title": "Achievement Measurement Assessments Development",
+              "statement": "Develop assessments to measure student achievement of the learning outcomes.",
+              "url": "https://osmt.wgu.edu/api/skills/ace77994-14b0-420c-83fb-f751e9ed5bbe"
+            },
+            {
+              "id": "i-YMg3lqdKpX",
+              "category": "Instructional Design",
+              "title": "Apply Assessment Methods",
+              "statement": "Apply assessment strategies and methods that align to instructional goals and learning outcomes.",
+              "url": "https://osmt.wgu.edu/api/skills/1b635de5-02ca-4794-9030-893d49f827ae"
+            }
+          ],
+          "comp_order": 3
+        },
+        {
+          "pcc_id": "i-Ur15OdRBQg",
+          "prog_course_id": "i-I9MTcu7USE",
+          "title": "Designs an Assessment System",
+          "statement": "The learner designs a balanced and comprehensive assessment system that aligns to standards and measures progress toward learning goals.",
+          "level": 2.5,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "R",
+            "i-8DvdCQVskp": "M",
+            "i-h0bUk6iSUF": "R",
+            "i-jSngIIZ9ua": "R"
+          },
+          "cct_alignments": {},
+          "skills": [
+            {
+              "id": "i-Y_q2KpUFs_",
+              "category": "Curriculum Development",
+              "title": "Learner Assessment Strategy Development",
+              "statement": "Develop a learner assessment strategy.",
+              "url": "https://osmt.wgu.edu/api/skills/f1c3a0d1-ebd5-4e73-a6a9-bedc65cd827b"
+            }
+          ],
+          "comp_order": 4
+        }
+      ]
+    },
+    {
+      "prog_course_id": "i-v-MwDbkmIT",
+      "course_base_id": "i-LIYSc3Qo6r",
+      "code": "EXXX",
+      "name": "MSCIN Capstone",
+      "display_name": "EXXX: MSCIN Capstone",
+      "term": "4",
+      "std_path_order": 10,
+      "cu": 3,
+      "scope": "New",
+      "ownership": "WSE",
+      "designation": "",
+      "certificate": "",
+      "scope_notes": "The Master of Science in Curriculum and Instruction Capstone is the culminating course of the degree. It unites content area knowledge with the completion of a research project or study.",
+      "description": "",
+      "po_alignments": {
+        "i-9Me4zgDN0w": "M",
+        "i-8DvdCQVskp": "M",
+        "i-h0bUk6iSUF": "M",
+        "i-dwHp3c0lb0": "M",
+        "i-jSngIIZ9ua": "M",
+        "i-i1x7EGPutE": "M",
+        "i-7q070Z48A1": "M"
+      },
+      "cct_alignments": {},
+      "competencies": [
+        {
+          "pcc_id": "i-JOWew84ftY",
+          "prog_course_id": "i-v-MwDbkmIT",
+          "title": "Preparing to do Research",
+          "statement": "The learner produces a research proposal that satisfies and cites specific laws, policies, codes of ethics, professional standards, and other applicable requirements to advance student learning.",
+          "level": 2.4,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "M",
+            "i-8DvdCQVskp": "M",
+            "i-h0bUk6iSUF": "M",
+            "i-dwHp3c0lb0": "M",
+            "i-jSngIIZ9ua": "M",
+            "i-i1x7EGPutE": "M",
+            "i-7q070Z48A1": "M"
+          },
+          "cct_alignments": {},
+          "skills": [],
+          "comp_order": 1
+        },
+        {
+          "pcc_id": "i-g-4057lPHH",
+          "prog_course_id": "i-v-MwDbkmIT",
+          "title": "Capstone Literature Review and Methodology",
+          "statement": "The learner writes a scholarly literature review and research methodology chapters that align with the approved research proposal.",
+          "level": 2.4,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "M",
+            "i-8DvdCQVskp": "M",
+            "i-h0bUk6iSUF": "M",
+            "i-dwHp3c0lb0": "M",
+            "i-jSngIIZ9ua": "M",
+            "i-i1x7EGPutE": "M",
+            "i-7q070Z48A1": "M"
+          },
+          "cct_alignments": {},
+          "skills": [],
+          "comp_order": 2
+        },
+        {
+          "pcc_id": "i-9WpQHRJcoX",
+          "prog_course_id": "i-v-MwDbkmIT",
+          "title": "Conducts the Research Process",
+          "statement": "The learner conducts their research project and collects data consistent with their proposal.",
+          "level": 2.4,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "M",
+            "i-8DvdCQVskp": "M",
+            "i-h0bUk6iSUF": "M",
+            "i-dwHp3c0lb0": "M",
+            "i-jSngIIZ9ua": "M",
+            "i-i1x7EGPutE": "M",
+            "i-7q070Z48A1": "M"
+          },
+          "cct_alignments": {},
+          "skills": [],
+          "comp_order": 3
+        },
+        {
+          "pcc_id": "i-_2l8fBXETb",
+          "prog_course_id": "i-v-MwDbkmIT",
+          "title": "Results and Conclusions",
+          "statement": "The learner writes the results and conclusions chapters to align with the approved research proposal after collecting and analyzing the data for the research project or study.",
+          "level": 2.4,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "M",
+            "i-8DvdCQVskp": "M",
+            "i-h0bUk6iSUF": "M",
+            "i-dwHp3c0lb0": "M",
+            "i-jSngIIZ9ua": "M",
+            "i-i1x7EGPutE": "M",
+            "i-7q070Z48A1": "M"
+          },
+          "cct_alignments": {},
+          "skills": [],
+          "comp_order": 4
+        },
+        {
+          "pcc_id": "i-RN2WsBuoKn",
+          "prog_course_id": "i-v-MwDbkmIT",
+          "title": "Presenting the Capstone",
+          "statement": "The learner presents a completed capstone supported by a narrated multimedia presentation that could potentially contribute to knowledge in the field of curriculum and instruction.",
+          "level": 2.4,
+          "assessment": "PA",
+          "po_alignments": {
+            "i-9Me4zgDN0w": "M",
+            "i-8DvdCQVskp": "M",
+            "i-h0bUk6iSUF": "M",
+            "i-dwHp3c0lb0": "M",
+            "i-jSngIIZ9ua": "M",
+            "i-i1x7EGPutE": "M",
+            "i-7q070Z48A1": "M"
+          },
+          "cct_alignments": {},
+          "skills": [],
+          "comp_order": 5
+        }
+      ]
+    }
+  ]
+}

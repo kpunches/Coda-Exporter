@@ -25,6 +25,9 @@ TABLES = {
     "course_x_cct":     "grid-bdbEJT9Kuq",   # _PC | _CCTs
     "comp_x_po":        "grid-NkK5JDeDhF",   # _Progs_Courses_Comps | _Progs Outcomes
     "comp_x_cct":       "grid-6xLuZLsQ_t",   # _PCC | _CCTs
+    # Skill tables
+    "skills":           "grid-5p9sHmnPst",   # _Rich Skill Descriptors (RSDs) — base
+    "comp_x_skill":     "grid-bYtzEaQQ0t",   # _PCC_RSDs (competency × skill junction)
 }
 
 # ----- _Progs | _Courses columns -----
@@ -78,6 +81,19 @@ CXA_ALIGNED      = "c-bBVinldWlI"  # array of IRMA refs
 CMX_PCC          = "c-pvQqegHRGa"  # ref → PCC
 CMX_TARGET       = "c-K0OcZXEwDe"  # ref → PO or CCT
 CMX_ALIGNED      = "c-BKtOyobxvu"  # array of IRMA refs
+
+
+# ----- _PCC_RSDs (competency × skill junction) columns -----
+# All "skill" fields are projected through formula columns on the junction
+# (sourced from the linked _Rich Skill Descriptors row), so a single read of
+# the junction yields everything needed for the Comps→Skills / Skills→Comps tabs.
+PCCS_SKILL          = "c-x8Iymo5syn"  # ref → _Rich Skill Descriptors (writable)
+PCCS_PCC            = "c-5n6qQLcwC1"  # ref → _PCC (writable)
+PCCS_PROGRAM        = "c-U1ClOaZMhV"  # ref → programs (formula, for server-side filtering)
+PCCS_SKILL_CATEGORY = "c-_c2GoFWRqN"  # text (formula projection)
+PCCS_SKILL_TITLE    = "c-aMkASg0dfw"  # text (formula projection)
+PCCS_SKILL_STMT     = "c-dmUCCToXTj"  # text (formula projection)
+PCCS_CANONICAL_URL  = "c-n3mYBbg2Q0"  # urlref (formula projection)
 
 
 # ----- Expected IRMA/X identifier -> letter mapping (for sanity check / fallback) -----
